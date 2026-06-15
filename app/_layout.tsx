@@ -1,24 +1,136 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
+import {AuthProvider, useAuthContext} from '@/lib/auth/auth-context';
+import {queryClient} from '@/lib/query-client';
+import {
+  Rosario_400Regular,
+  Rosario_500Medium,
+  Rosario_600SemiBold,
+  Rosario_700Bold,
+  useFonts,
+} from '@expo-google-fonts/rosario';
+import {QueryClientProvider} from '@tanstack/react-query';
+import {Stack, useRouter, useSegments} from 'expo-router';
+import {StatusBar} from 'expo-status-bar';
+import {useEffect, useRef, useState} from 'react';
+import {ActivityIndicator, View} from 'react-native';
 import 'react-native-reanimated';
+import * as SplashScreen from 'expo-splash-screen';
+import {ToastProvider} from '@/components/ui/toast';
+import {CurrencyProvider} from '@/lib/currency-context';
+import {storage} from '@/lib/storage';
+import '../global.css';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
+// Prevent the splash screen from auto-hiding before assets are loaded.
+SplashScreen.preventAutoHideAsync().catch(() => {});
 
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+// ─── InitialLayout ────────────────────────────────────────────────────────────
+function InitialLayout() {
+  const {isAuthenticated, isLoading} = useAuthContext();
+  const segments = useSegments();
+  const router = useRouter();
+
+  const [fontsLoaded] = useFonts({
+    Rosario_400Regular,
+    Rosario_500Medium,
+    Rosario_600SemiBold,
+    Rosario_700Bold,
+  });
+
+  const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
+
+  // Track whether user *was* authenticated to detect logout transitions
+  const wasAuthenticated = useRef(false);
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const completed = await storage.getOnboardingCompleted();
+        setOnboardingCompleted(completed);
+      } catch {
+        setOnboardingCompleted(false);
+      }
+    })();
+  }, []);
+
+  useEffect(() => {
+    if (isLoading || !fontsLoaded || onboardingCompleted === null) return;
+
+    const firstSeg = segments[0] as string | undefined;
+    const inAuthGroup = firstSeg === '(auth)';
+    const atRoot = !firstSeg || firstSeg === 'index';
+
+    if (isAuthenticated) {
+      // User is logged in — redirect away from auth/onboarding screens
+      wasAuthenticated.current = true;
+      if (inAuthGroup || atRoot) {
+        router.replace('/(tabs)');
+      }
+    } else {
+      // User is NOT authenticated
+      if (wasAuthenticated.current) {
+        // Was previously authenticated → this is a logout transition
+        wasAuthenticated.current = false;
+        router.replace('/login');
+      } else if (onboardingCompleted) {
+        // First load, onboarding done → go to login (if not already there)
+        if (!inAuthGroup) {
+          router.replace('/login');
+        }
+      } else {
+        // Onboarding not done → show onboarding at root
+        if (!atRoot) {
+          router.replace('/');
+        }
+      }
+    }
+  }, [isAuthenticated, isLoading, fontsLoaded, onboardingCompleted, router, segments]);
+
+  useEffect(() => {
+    if (!isLoading && fontsLoaded && onboardingCompleted !== null) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [isLoading, fontsLoaded, onboardingCompleted]);
+
+  if (isLoading || !fontsLoaded || onboardingCompleted === null) {
+    return (
+      <View
+        style={{
+          flex: 1,
+          backgroundColor: '#FFFFFF',
+          alignItems: 'center',
+          justifyContent: 'center',
+        }}>
+        <ActivityIndicator color='#000000' size='large' />
+      </View>
+    );
+  }
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <Stack screenOptions={{headerShown: false}}>
+      <Stack.Screen name="terms" options={{presentation: 'modal'}} />
+      <Stack.Screen name="privacy" options={{presentation: 'modal'}} />
+      <Stack.Screen name="currency" options={{presentation: 'modal'}} />
+      <Stack.Screen name="create-transaction" options={{presentation: 'modal'}} />
+      <Stack.Screen name="create-net-worth" options={{presentation: 'modal'}} />
+      <Stack.Screen name="create-budget-goal" options={{presentation: 'modal'}} />
+      <Stack.Screen name="create-recurring" options={{presentation: 'modal'}} />
+      <Stack.Screen name="transaction/[id]" options={{presentation: 'card'}} />
+    </Stack>
+  );
+}
+
+// ─── Root layout ──────────────────────────────────────────────────────────────
+export default function RootLayout() {
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ToastProvider>
+        <CurrencyProvider>
+          <AuthProvider>
+            <InitialLayout />
+            <StatusBar style='dark' backgroundColor='#FFFFFF' />
+          </AuthProvider>
+        </CurrencyProvider>
+      </ToastProvider>
+    </QueryClientProvider>
   );
 }

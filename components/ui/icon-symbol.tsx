@@ -1,41 +1,78 @@
-// Fallback for using MaterialIcons on Android and web.
+import React from 'react';
+import Feather from '@expo/vector-icons/Feather';
+import { type StyleProp, type ViewStyle } from 'react-native';
 
-import MaterialIcons from '@expo/vector-icons/MaterialIcons';
-import { SymbolWeight, SymbolViewProps } from 'expo-symbols';
-import { ComponentProps } from 'react';
-import { OpaqueColorValue, type StyleProp, type TextStyle } from 'react-native';
-
-type IconMapping = Record<SymbolViewProps['name'], ComponentProps<typeof MaterialIcons>['name']>;
-type IconSymbolName = keyof typeof MAPPING;
-
-/**
- * Add your SF Symbols to Material Icons mappings here.
- * - see Material Icons in the [Icons Directory](https://icons.expo.fyi).
- * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
- */
-const MAPPING = {
+// Mapping from SF Symbol names used in the app to Feather icon names.
+const MAPPING: Record<string, keyof typeof Feather.glyphMap> = {
+  // Navigation / Tabs
   'house.fill': 'home',
+  'chart.bar.xaxis': 'trending-up',
+  'lock.shield.fill': 'shield',
+  'faceid': 'user',
+  'bell': 'bell',
+  'rectangle.portrait.and.arrow.right': 'log-out',
+  'plus.circle.fill': 'plus-circle',
+  'chart.pie.fill': 'pie-chart',
+  'arrow.clockwise': 'repeat',
+  'chart.bar.fill': 'bar-chart-2',
+  'xmark.circle.fill': 'x-circle',
+  'magnifyingglass': 'search',
+  'person.fill': 'user',
+  'waveform.path.ecg': 'activity',
+  'info.circle': 'info',
+  'eye': 'eye',
+  'eye.slash': 'eye-off',
+  'calendar': 'calendar',
+  'checkmark.circle.fill': 'check-circle',
+  'circle': 'circle',
+  'checkmark': 'check',
+  'plus': 'plus',
+  'trash': 'trash-2',
+  'trash.fill': 'trash-2',
+  'arrow.up.right': 'arrow-up-right',
+  'arrow.down.left': 'arrow-down-left',
+  'chevron.right': 'chevron-right',
   'paperplane.fill': 'send',
   'chevron.left.forwardslash.chevron.right': 'code',
-  'chevron.right': 'chevron-right',
-} as IconMapping;
+  'list.bullet': 'list',
+  'gearshape.fill': 'settings',
+  'envelope': 'mail',
+  'lock': 'lock',
+  'person': 'user',
+  'lock.shield': 'shield',
+  'gift': 'gift',
+  'chevron.left': 'chevron-left',
+  'lock.rotation': 'lock',
+  'key.fill': 'key',
+  'lock.open.fill': 'unlock',
+  'text.alignleft': 'edit-3',
+  'dollarsign': 'dollar-sign',
+  'note.text': 'edit-2',
+  'moon': 'moon',
+  'credit-card': 'credit-card',
+  'repeat': 'repeat',
+  'activity': 'activity',
+  'list': 'list',
+  'trending-up': 'trending-up',
+  'slider.horizontal.3': 'sliders',
+  'filter': 'filter',
+};
 
-/**
- * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
- * This ensures a consistent look across platforms, and optimal resource usage.
- * Icon `name`s are based on SF Symbols and require manual mapping to Material Icons.
- */
+export type IconSymbolName = keyof typeof MAPPING;
+
 export function IconSymbol({
   name,
   size = 24,
   color,
   style,
+  weight,
 }: {
   name: IconSymbolName;
   size?: number;
-  color: string | OpaqueColorValue;
-  style?: StyleProp<TextStyle>;
-  weight?: SymbolWeight;
+  color: string;
+  style?: StyleProp<ViewStyle>;
+  weight?: any;
 }) {
-  return <MaterialIcons color={color} size={size} name={MAPPING[name]} style={style} />;
+  const featherName = MAPPING[name] || 'help-circle';
+  return <Feather color={color} size={size} name={featherName} style={style as any} />;
 }
