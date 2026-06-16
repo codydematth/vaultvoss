@@ -13,6 +13,9 @@ export const recurringApi = {
   create: (p: RecurringTransactionCreate) =>
     apiClient.post<ApiResponse<RecurringTransaction>>('/recurring-transactions/', p),
 
+  get: (id: string) =>
+    apiClient.get<ApiResponse<RecurringTransaction>>(`/recurring-transactions/${id}`),
+
   update: (id: string, p: RecurringTransactionUpdate) =>
     apiClient.patch<ApiResponse<RecurringTransaction>>(`/recurring-transactions/${id}`, p),
 

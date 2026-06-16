@@ -1,12 +1,12 @@
 import {AuthProvider, useAuthContext} from '@/lib/auth/auth-context';
 import {queryClient} from '@/lib/query-client';
 import {
-  Rosario_400Regular,
-  Rosario_500Medium,
-  Rosario_600SemiBold,
-  Rosario_700Bold,
+  Lato_300Light,
+  Lato_400Regular,
+  Lato_700Bold,
+  Lato_900Black,
   useFonts,
-} from '@expo-google-fonts/rosario';
+} from '@expo-google-fonts/lato';
 import {QueryClientProvider} from '@tanstack/react-query';
 import {Stack, useRouter, useSegments} from 'expo-router';
 import {StatusBar} from 'expo-status-bar';
@@ -17,6 +17,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import {ToastProvider} from '@/components/ui/toast';
 import {CurrencyProvider} from '@/lib/currency-context';
 import {storage} from '@/lib/storage';
+import {requestPermissions} from '@/lib/notifications';
+import * as Updates from 'expo-updates';
 import '../global.css';
 
 // Prevent the splash screen from auto-hiding before assets are loaded.
@@ -30,10 +32,10 @@ function InitialLayout() {
   const router = useRouter();
 
   const [fontsLoaded] = useFonts({
-    Rosario_400Regular,
-    Rosario_500Medium,
-    Rosario_600SemiBold,
-    Rosario_700Bold,
+    Lato_300Light,
+    Lato_400Regular,
+    Lato_700Bold,
+    Lato_900Black,
   });
 
   const [onboardingCompleted, setOnboardingCompleted] = useState<boolean | null>(null);
@@ -48,6 +50,27 @@ function InitialLayout() {
         setOnboardingCompleted(completed);
       } catch {
         setOnboardingCompleted(false);
+      }
+    })();
+  }, []);
+
+  // Request notification permissions on first launch
+  useEffect(() => {
+    requestPermissions().catch(() => {});
+  }, []);
+
+  // Check for OTA updates on launch (production only)
+  useEffect(() => {
+    if (__DEV__) return;
+    (async () => {
+      try {
+        const update = await Updates.checkForUpdateAsync();
+        if (update.isAvailable) {
+          await Updates.fetchUpdateAsync();
+          await Updates.reloadAsync();
+        }
+      } catch (err) {
+        console.log('OTA update check failed:', err);
       }
     })();
   }, []);
@@ -114,6 +137,7 @@ function InitialLayout() {
       <Stack.Screen name="create-net-worth" options={{presentation: 'modal'}} />
       <Stack.Screen name="create-budget-goal" options={{presentation: 'modal'}} />
       <Stack.Screen name="create-recurring" options={{presentation: 'modal'}} />
+      <Stack.Screen name="notifications" options={{presentation: 'modal'}} />
       <Stack.Screen name="transaction/[id]" options={{presentation: 'card'}} />
     </Stack>
   );

@@ -57,7 +57,7 @@ export default function ForgotPasswordScreen() {
               <IconSymbol name='lock.rotation' size={28} color={C.accent} />
             </View>
             <Text variant='heading' color='primary'>Reset Password</Text>
-            <Text variant='body' color='secondary'>Enter your email and we'll send you a reset code.</Text>
+            <Text variant='body' color='secondary'>{"Enter your email and we'll send you a reset code."}</Text>
           </View>
 
           {sent ? (

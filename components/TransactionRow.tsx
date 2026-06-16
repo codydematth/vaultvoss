@@ -20,10 +20,11 @@ function formatTime(dateStr: string) {
 }
 
 export function TransactionRow({item, onPress}: TransactionRowProps) {
-  const {formatMoney} = useCurrency();
+  const {currency: preferredCurrency, convert, formatMoney} = useCurrency();
   const isIncome = item.transaction_type === 'income';
   const category = isIncome ? item.income_category : item.expense_category;
-  const amount = `${isIncome ? '+' : '-'}${formatMoney(Number(item.amount))}`;
+  const convertedAmount = convert(Number(item.amount), item.currency || 'USD', preferredCurrency);
+  const amount = `${isIncome ? '+' : '-'}${formatMoney(convertedAmount)}`;
 
   return (
     <TouchableOpacity

@@ -385,7 +385,7 @@ export default function ProfileScreen() {
             ) : null}
             <Button
               label={pwLoading ? "Changing…" : "Change Password"}
-              variant="secondary"
+              variant="primary"
               size="md"
               loading={pwLoading}
               onPress={handleChangePassword}

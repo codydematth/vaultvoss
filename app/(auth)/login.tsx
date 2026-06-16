@@ -6,11 +6,7 @@ import {C} from '@/constants/colors';
 import {Fonts} from '@/constants/theme';
 import {useGoogleAuth, useLogin} from '@/hooks/use-auth';
 import {zodResolver} from '@hookform/resolvers/zod';
-import * as Google from 'expo-auth-session/providers/google';
-import * as Haptics from 'expo-haptics';
-import {useFocusEffect, useRouter} from 'expo-router';
-import {IconSymbol} from '@/components/ui/icon-symbol';
-import * as WebBrowser from 'expo-web-browser';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useCallback, useEffect, useState} from 'react';
 import {Controller, useForm} from 'react-hook-form';
 import {
@@ -28,8 +24,14 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {z} from 'zod';
 import * as LocalAuthentication from 'expo-local-authentication';
 import {storage} from '@/lib/storage';
+import * as Haptics from 'expo-haptics';
+import {useFocusEffect, useRouter} from 'expo-router';
+import {IconSymbol} from '@/components/ui/icon-symbol';
 
-WebBrowser.maybeCompleteAuthSession();
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+});
 
 const schema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
@@ -49,20 +51,22 @@ export default function LoginScreen() {
     defaultValues: {email: '', password: ''},
   });
 
-  const [, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  });
-
-  useEffect(() => {
-    if (googleResponse?.type === 'success') {
-      const idToken = googleResponse.authentication?.idToken;
-      if (!idToken) { setApiError('Google sign-in failed. No token received.'); return; }
+  const signInWithGoogle = async () => {
+    try {
       setApiError(null);
+      await GoogleSignin.hasPlayServices();
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken;
+      if (!idToken) {
+        setApiError('Google sign-in failed. No token received.');
+        return;
+      }
       googleAuthMutation.mutate({id_token: idToken}, {onError: (err) => setApiError(err.message)});
+    } catch (error: any) {
+      console.log('Google Sign-in error:', error);
+      setApiError(error?.message || 'Google sign-in failed.');
     }
-  }, [googleResponse]);
+  };
 
   const onSubmit = (values: FormValues) => {
     setApiError(null);
@@ -301,7 +305,7 @@ export default function LoginScreen() {
 
           {/* Google */}
           <TouchableOpacity
-            onPress={() => { setApiError(null); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); promptGoogleAsync(); }}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); signInWithGoogle(); }}
             disabled={isLoading}
             activeOpacity={0.7}
             style={{
@@ -335,7 +339,7 @@ export default function LoginScreen() {
               marginTop: 12,
             }}>
             <Text variant='body' color='secondary'>
-              Don't have an account?{' '}
+              {"Don't have an account? "}
               <Text variant='body' style={{color: C.accent, fontFamily: Fonts.sansSemiBold}}>Sign Up</Text>
             </Text>
           </TouchableOpacity>

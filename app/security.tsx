@@ -229,7 +229,7 @@ export default function SecurityScreen() {
             }}>
             <IconSymbol name="info.circle" size={20} color={C.warning} />
             <Text variant="caption" style={{flex: 1, color: C.warning, fontSize: 12, lineHeight: 18}}>
-              No biometric profiles registered. Please configure Face ID or Fingerprints in your device's system settings first.
+              {"No biometric profiles registered. Please configure Face ID or Fingerprints in your device's system settings first."}
             </Text>
           </View>
         )}

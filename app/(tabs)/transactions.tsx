@@ -318,7 +318,7 @@ export default function TransactionsScreen() {
         <SectionList
           sections={sections}
           keyExtractor={(item) => item.id}
-          contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 32}}
+          contentContainerStyle={{paddingHorizontal: 20, paddingBottom: 110}}
           showsVerticalScrollIndicator={false}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={C.accent} />}
           renderSectionHeader={({section: {title}}) => (

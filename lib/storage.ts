@@ -76,4 +76,49 @@ export const storage = {
     const raw = await SecureStore.getItemAsync('vv_onboarding_completed');
     return raw === 'true';
   },
+
+  // ── Notification preferences ────────────────────────────────────────────
+  setNotifDailyEnabled: (enabled: boolean) =>
+    SecureStore.setItemAsync('vv_notif_daily_enabled', enabled ? 'true' : 'false'),
+  getNotifDailyEnabled: async () => {
+    const raw = await SecureStore.getItemAsync('vv_notif_daily_enabled');
+    return raw === 'true';
+  },
+
+  setNotifDailyTime: (hour: number, minute: number) =>
+    SecureStore.setItemAsync('vv_notif_daily_time', `${hour}:${minute}`),
+  getNotifDailyTime: async (): Promise<{hour: number; minute: number}> => {
+    const raw = await SecureStore.getItemAsync('vv_notif_daily_time');
+    if (raw) {
+      const [h, m] = raw.split(':').map(Number);
+      return {hour: h ?? 20, minute: m ?? 0};
+    }
+    return {hour: 20, minute: 0}; // default 8 PM
+  },
+
+  setNotifBillsEnabled: (enabled: boolean) =>
+    SecureStore.setItemAsync('vv_notif_bills_enabled', enabled ? 'true' : 'false'),
+  getNotifBillsEnabled: async () => {
+    const raw = await SecureStore.getItemAsync('vv_notif_bills_enabled');
+    return raw === 'true';
+  },
+
+  setNotifBudgetEnabled: (enabled: boolean) =>
+    SecureStore.setItemAsync('vv_notif_budget_enabled', enabled ? 'true' : 'false'),
+  getNotifBudgetEnabled: async () => {
+    const raw = await SecureStore.getItemAsync('vv_notif_budget_enabled');
+    return raw === 'true';
+  },
+
+  setNotifWeeklyEnabled: (enabled: boolean) =>
+    SecureStore.setItemAsync('vv_notif_weekly_enabled', enabled ? 'true' : 'false'),
+  getNotifWeeklyEnabled: async () => {
+    const raw = await SecureStore.getItemAsync('vv_notif_weekly_enabled');
+    return raw === 'true';
+  },
+
+  setWarnedBudgets: (listJson: string) =>
+    SecureStore.setItemAsync('vv_warned_budgets', listJson),
+  getWarnedBudgets: () =>
+    SecureStore.getItemAsync('vv_warned_budgets'),
 };

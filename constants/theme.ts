@@ -5,20 +5,20 @@ export const Colors = {
   dark: {
     text: '#111111',
     background: '#FFFFFF',
-    tint: '#000000',
+    tint: '#0088FF',
     icon: '#6B7280',
     tabIconDefault: '#9CA3AF',
-    tabIconSelected: '#000000',
+    tabIconSelected: '#0088FF',
   },
 };
 
 // ─── Font families ────────────────────────────────────────────────────────────
-// Rosario is loaded in _layout.tsx via expo-font.
+// Lato is loaded in _layout.tsx via expo-font.
 // We reference the exact PostScript names that expo-font registers.
 export const Fonts = {
-  sans: 'Rosario_400Regular',
-  sansMedium: 'Rosario_500Medium',
-  sansSemiBold: 'Rosario_600SemiBold',
-  sansBold: 'Rosario_700Bold',
+  sans: 'Lato_400Regular',
+  sansMedium: 'Lato_400Regular',
+  sansSemiBold: 'Lato_700Bold',
+  sansBold: 'Lato_900Black',
   mono: 'monospace',
 } as const;

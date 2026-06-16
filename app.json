@@ -8,20 +8,30 @@
     "scheme": "vaultvoss",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "enabled": true,
+      "checkAutomatically": "ON_LOAD",
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/2c15d7e6-e24e-40c7-bc3e-70d8c828cef2"
+    },
     "ios": {
       "supportsTablet": true,
       "icon": {
         "light": "./assets/images/Light.png",
         "dark": "./assets/images/Dark.png",
         "tinted": "./assets/images/Tinted.png"
-      }
+      },
+      "bundleIdentifier": "com.codydematth.vaultvoss"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
-        "foregroundImage": "./assets/images/android-icon-foreground.png",
-        "backgroundImage": "./assets/images/android-icon-background.png",
-        "monochromeImage": "./assets/images/android-icon-monochrome.png"
+        "backgroundColor": "#ffffff",
+        "foregroundImage": "./assets/images/adaptive-icon.png",
+        "backgroundImage": "./assets/images/adaptive-icon.png",
+        "monochromeImage": "./assets/images/adaptive-icon.png"
       },
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false,
@@ -47,7 +57,21 @@
         }
       ],
       "expo-secure-store",
-      "expo-font"
+      "expo-font",
+      "./plugins/withJitpack",
+      [
+        "@react-native-google-signin/google-signin",
+        {
+          "iosUrlScheme": "com.googleusercontent.apps.447105374706-nb40amb89c2ht6tjn9jsv9uqfei4l8nf"
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/adaptive-icon.png",
+          "color": "#1E88E5"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

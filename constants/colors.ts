@@ -18,6 +18,10 @@ export const C = {
   accentDim: 'rgba(0,0,0,0.05)',
   accentPress: '#222222',
 
+  // Brand Blue (used only for active tab and settings icons)
+  brandBlue: '#0088FF',
+  brandBlueDim: 'rgba(0,136,255,0.08)',
+
   // Text
   textPrimary: '#111111',
   textSecondary: '#6B7280',

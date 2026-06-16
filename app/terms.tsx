@@ -50,9 +50,7 @@ export default function TermsScreen() {
         </Text>
 
         <Text variant="body" color="secondary" style={styles.paragraph}>
-          Welcome to VaultVoss. Please read these Terms of Service ("Terms")
-          carefully before using our mobile application ("App") operated by
-          VaultVoss Inc. ("us", "we", or "our").
+          {'Welcome to VaultVoss. Please read these Terms of Service ("Terms") carefully before using our mobile application ("App") operated by VaultVoss Inc. ("us", "we", or "our").'}
         </Text>
 
         {/* Section 1 */}
