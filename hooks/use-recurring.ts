@@ -2,10 +2,12 @@ import {recurringApi} from '@/lib/api/recurring';
 import {getApiError} from '@/lib/api/client';
 import type {RecurringTransactionCreate, RecurringTransactionUpdate} from '@/lib/api/types';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {syncAllRecurringReminders} from '@/lib/notifications';
 
 export const RECURRING_KEYS = {
   all: ['recurring'] as const,
   list: () => ['recurring', 'list'] as const,
+  detail: (id: string) => ['recurring', 'detail', id] as const,
 };
 
 export function useRecurringTransactions() {
@@ -19,6 +21,29 @@ export function useRecurringTransactions() {
   });
 }
 
+export function useRecurringTransaction(id: string) {
+  return useQuery({
+    queryKey: RECURRING_KEYS.detail(id),
+    queryFn: async () => {
+      const {data} = await recurringApi.get(id);
+      if (data.hasError) throw new Error(data.message);
+      return data.data;
+    },
+    enabled: !!id,
+  });
+}
+
+async function syncReminders() {
+  try {
+    const {data} = await recurringApi.list();
+    if (data.data) {
+      await syncAllRecurringReminders(data.data);
+    }
+  } catch (err) {
+    console.error('Failed to sync recurring reminders after mutation:', err);
+  }
+}
+
 export function useCreateRecurring() {
   const qc = useQueryClient();
   return useMutation({
@@ -27,7 +52,10 @@ export function useCreateRecurring() {
       if (data.hasError) throw new Error(data.message);
       return data.data;
     },
-    onSuccess: () => qc.invalidateQueries({queryKey: RECURRING_KEYS.all}),
+    onSuccess: async () => {
+      await qc.invalidateQueries({queryKey: RECURRING_KEYS.all});
+      await syncReminders();
+    },
     onError: (err) => { throw new Error(getApiError(err)); },
   });
 }
@@ -40,7 +68,10 @@ export function useUpdateRecurring() {
       if (data.hasError) throw new Error(data.message);
       return data.data;
     },
-    onSuccess: () => qc.invalidateQueries({queryKey: RECURRING_KEYS.all}),
+    onSuccess: async () => {
+      await qc.invalidateQueries({queryKey: RECURRING_KEYS.all});
+      await syncReminders();
+    },
     onError: (err) => { throw new Error(getApiError(err)); },
   });
 }
@@ -52,7 +83,10 @@ export function useDeleteRecurring() {
       const {data} = await recurringApi.delete(id);
       if (data.hasError) throw new Error(data.message);
     },
-    onSuccess: () => qc.invalidateQueries({queryKey: RECURRING_KEYS.all}),
+    onSuccess: async () => {
+      await qc.invalidateQueries({queryKey: RECURRING_KEYS.all});
+      await syncReminders();
+    },
     onError: (err) => { throw new Error(getApiError(err)); },
   });
 }
@@ -65,9 +99,10 @@ export function useTriggerRecurring() {
       if (data.hasError) throw new Error(data.message);
       return data.data;
     },
-    onSuccess: () => {
-      qc.invalidateQueries({queryKey: RECURRING_KEYS.all});
-      qc.invalidateQueries({queryKey: ['transactions']});
+    onSuccess: async () => {
+      await qc.invalidateQueries({queryKey: RECURRING_KEYS.all});
+      await qc.invalidateQueries({queryKey: ['transactions']});
+      await syncReminders();
     },
     onError: (err) => { throw new Error(getApiError(err)); },
   });

@@ -19,7 +19,7 @@ import {
 } from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useToast} from '@/components/ui/toast';
-import {useCurrency, CURRENCY_SYMBOLS} from '@/lib/currency-context';
+import {useCurrency, CURRENCY_SYMBOLS, formatAmountWithCommas} from '@/lib/currency-context';
 import type {ExpenseCategory, IncomeCategory, TransactionType} from '@/lib/api/types';
 
 const EXPENSE_CATS: ExpenseCategory[] = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Bills', 'Health', 'Other'];
@@ -49,13 +49,14 @@ export default function CreateTransactionScreen() {
 
   const handleSubmit = () => {
     if (!name.trim()) { setError('Transaction name is required'); return; }
-    if (!amount || isNaN(Number(amount)) || Number(amount) <= 0) { setError('Enter a valid amount'); return; }
+    const parsedAmount = Number(amount.replace(/,/g, ''));
+    if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) { setError('Enter a valid amount'); return; }
     setError(null);
 
     const payload = {
       transaction_name: name.trim(),
       transaction_type: type,
-      amount: Number(amount),
+      amount: parsedAmount,
       currency,
       note: note.trim() || undefined,
       expense_category: type === 'expense' ? expenseCat : undefined,
@@ -87,7 +88,7 @@ export default function CreateTransactionScreen() {
 
       <KeyboardAvoidingView 
         style={{flex: 1}} 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView 
           showsVerticalScrollIndicator={false} 
@@ -128,7 +129,7 @@ export default function CreateTransactionScreen() {
                 label='Amount'
                 placeholder='0.00'
                 value={amount}
-                onChangeText={setAmount}
+                onChangeText={(val) => setAmount(formatAmountWithCommas(val))}
                 keyboardType='decimal-pad'
                 returnKeyType='done'
                 leadingIcon={

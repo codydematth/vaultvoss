@@ -229,7 +229,7 @@ export default function SecurityScreen() {
             }}>
             <IconSymbol name="info.circle" size={20} color={C.warning} />
             <Text variant="caption" style={{flex: 1, color: C.warning, fontSize: 12, lineHeight: 18}}>
-              No biometric profiles registered. Please configure Face ID or Fingerprints in your device's system settings first.
+              {"No biometric profiles registered. Please configure Face ID or Fingerprints in your device's system settings first."}
             </Text>
           </View>
         )}
@@ -266,7 +266,7 @@ export default function SecurityScreen() {
       {/* Password Confirmation Modal */}
       <Modal visible={confirmVisible} transparent animationType="slide" onRequestClose={() => setConfirmVisible(false)}>
         <Pressable style={{flex: 1, backgroundColor: C.overlay}} onPress={() => setConfirmVisible(false)} />
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View
             style={{
               backgroundColor: C.bgCard,

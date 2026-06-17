@@ -134,11 +134,16 @@ export interface AnalyticsSummary {
 
 export interface CategoryBreakdownItem {
   category: string;
-  transaction_type: TransactionType;
+  transaction_type?: TransactionType;
   total: number;
-  count: number;
-  currency: string;
+  count?: number;
+  currency?: string;
   percentage?: number;
+}
+
+export interface CategoryBreakdownResponse {
+  expenses: CategoryBreakdownItem[];
+  income: CategoryBreakdownItem[];
 }
 
 export interface MonthlyDataPoint {

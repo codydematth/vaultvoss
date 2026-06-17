@@ -4,7 +4,7 @@ import { Text } from "@/components/ui/text";
 import { C } from "@/constants/colors";
 import { Fonts } from "@/constants/theme";
 import { useAnalyticsSummary } from "@/hooks/use-analytics";
-import { useLogout, useMe } from "@/hooks/use-auth";
+import { useMe } from "@/hooks/use-auth";
 import { useBudgetGoals } from "@/hooks/use-budget-goals";
 import { useNetWorth } from "@/hooks/use-net-worth";
 import { useRecurringTransactions } from "@/hooks/use-recurring";
@@ -13,7 +13,7 @@ import { useCurrency } from "@/lib/currency-context";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -26,6 +26,8 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
+import { checkBudgetWarnings } from "@/lib/notifications";
+import { useAllBudgetGoalsStatus } from "@/hooks/use-budget-goals";
 
 const { width } = Dimensions.get("window");
 
@@ -60,7 +62,7 @@ function DonutProgress({ percentage, amount, label }: DonutProgressProps) {
           cx="32"
           cy="32"
           r={radius}
-          stroke={C.income}
+          stroke={C.brandBlue}
           strokeWidth={strokeWidth}
           fill="transparent"
           strokeDasharray={circumference}
@@ -77,45 +79,6 @@ function DonutProgress({ percentage, amount, label }: DonutProgressProps) {
       </View>
     </View>
   );
-}
-
-function getNetWorthIcon(
-  name: string,
-  type: "asset" | "liability",
-): IconSymbolName {
-  const n = name.toLowerCase();
-  if (type === "liability") {
-    if (n.includes("card") || n.includes("credit")) return "credit-card";
-    return "activity";
-  }
-  if (
-    n.includes("savings") ||
-    n.includes("bank") ||
-    n.includes("cash") ||
-    n.includes("vault")
-  ) {
-    return "lock.shield";
-  }
-  if (n.includes("gift") || n.includes("bonus")) {
-    return "gift";
-  }
-  if (
-    n.includes("investment") ||
-    n.includes("stock") ||
-    n.includes("crypto") ||
-    n.includes("shares")
-  ) {
-    return "chart.bar.xaxis";
-  }
-  if (
-    n.includes("property") ||
-    n.includes("house") ||
-    n.includes("home") ||
-    n.includes("land")
-  ) {
-    return "house.fill";
-  }
-  return "dollarsign";
 }
 
 export default function HomeScreen() {
@@ -136,7 +99,16 @@ export default function HomeScreen() {
   const { data: netWorth } = useNetWorth();
   const { data: budgetGoals } = useBudgetGoals();
   const { data: recurringItems } = useRecurringTransactions();
-  const logoutMutation = useLogout();
+
+  const { data: budgetStatuses } = useAllBudgetGoalsStatus();
+
+  // Check budget warnings when statuses load
+  const budgetCheckedRef = useRef(false);
+  useEffect(() => {
+    if (!budgetStatuses || budgetStatuses.length === 0 || budgetCheckedRef.current) return;
+    checkBudgetWarnings(budgetStatuses);
+    budgetCheckedRef.current = true;
+  }, [budgetStatuses]);
 
   // Load transactions based on active tab filtering
   const params =
@@ -152,7 +124,6 @@ export default function HomeScreen() {
     setRefreshing(false);
   };
 
-  const currency = summary?.currency ?? "USD";
   const totalIncome = summary?.total_income ?? 0;
   const totalExpenses = summary?.total_expenses ?? 0;
   const net =
@@ -220,7 +191,7 @@ export default function HomeScreen() {
             tintColor={C.accent}
           />
         }
-        contentContainerStyle={{ paddingBottom: 32 }}
+        contentContainerStyle={{ paddingBottom: 110 }}
       >
         {/* ── Header ── */}
         <View
@@ -286,6 +257,7 @@ export default function HomeScreen() {
               hitSlop={8}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                router.push('/notifications' as any);
               }}
             >
               <View style={{ position: "relative" }}>
@@ -313,17 +285,15 @@ export default function HomeScreen() {
           </Text>
           {summaryLoading ? (
             <ActivityIndicator
-              color={C.income}
+              color={C.accent}
               style={{ alignSelf: "flex-start", marginTop: 4 }}
             />
           ) : (
             <Text
-              variant="display"
+              variant="heading"
               style={{
-                color: C.income,
+                color: C.textPrimary,
                 fontFamily: Fonts.sansBold,
-                fontSize: 40,
-                lineHeight: 48,
               }}
             >
               {displayMoney(net)}
@@ -349,7 +319,7 @@ export default function HomeScreen() {
               <Text
                 variant="subheading"
                 color="primary"
-                style={{ fontFamily: Fonts.sansBold, fontSize: 18 }}
+                style={{ fontFamily: Fonts.sansBold }}
               >
                 Well done!
               </Text>
@@ -371,7 +341,7 @@ export default function HomeScreen() {
               >
                 <Text
                   style={{
-                    color: C.income,
+                    color: C.brandBlue,
                     fontFamily: Fonts.sansSemiBold,
                     fontSize: 13,
                   }}
@@ -382,7 +352,7 @@ export default function HomeScreen() {
             </View>
             <DonutProgress
               percentage={displaySavingsRate}
-              amount={`${getCurrencySymbol()}${Math.round(net * 0.1 || 75)}`}
+              amount={`${getCurrencySymbol()}${Math.round(net ?? 0).toLocaleString()}`}
               label="Saved"
             />
           </View>
@@ -425,19 +395,13 @@ export default function HomeScreen() {
                   />
                 </View>
                 <View className="gap-[6px]">
-                  <Text
-                    variant="caption"
-                    color="secondary"
-                    style={{ fontSize: 14, lineHeight: 16 }}
-                    numberOfLines={1}
-                  >
+                  <Text variant="caption" color="secondary" numberOfLines={1}>
                     {card.subtitle}
                   </Text>
                   <Text
-                    variant="body"
+                    variant="label"
                     weight="semibold"
                     color="primary"
-                    style={{ fontSize: 18, lineHeight: 20 }}
                     numberOfLines={1}
                   >
                     {card.title}
@@ -508,7 +472,7 @@ export default function HomeScreen() {
             >
               <Text
                 style={{
-                  color: C.income,
+                  color: C.brandBlue,
                   fontSize: 22,
                   fontFamily: Fonts.sansBold,
                   lineHeight: 26,
@@ -598,7 +562,7 @@ export default function HomeScreen() {
                         left: 0,
                         right: 0,
                         height: 3,
-                        backgroundColor: C.income,
+                        backgroundColor: C.accent,
                         borderRadius: 1.5,
                       }}
                     />
@@ -611,16 +575,18 @@ export default function HomeScreen() {
           {txLoading ? (
             <ActivityIndicator color={C.accent} />
           ) : transactions?.length ? (
-            transactions.map((tx) => (
-              <TransactionRow
-                key={tx.id}
-                item={tx}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  (router as any).push(`/transaction/${tx.id}`);
-                }}
-              />
-            ))
+            [...transactions]
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .map((tx) => (
+                <TransactionRow
+                  key={tx.id}
+                  item={tx}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    (router as any).push(`/transaction/${tx.id}`);
+                  }}
+                />
+              ))
           ) : (
             <View
               style={{

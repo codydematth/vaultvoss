@@ -22,6 +22,7 @@ export function Input({
   password = false,
   secureTextEntry,
   style,
+  placeholder,
   ...rest
 }: InputProps) {
   const [hidden, setHidden] = useState(true);
@@ -29,23 +30,60 @@ export function Input({
   const isPassword = password || secureTextEntry;
   const actualHidden = isPassword ? hidden : false;
 
+  const [localValue, setLocalValue] = useState<string | number>(
+    rest.value !== undefined ? rest.value : (rest.defaultValue !== undefined ? rest.defaultValue : '')
+  );
+  const value = rest.value !== undefined ? rest.value : localValue;
+  const hasText = value !== undefined && value !== null && String(value).length > 0;
+
   return (
     <View style={s.wrapper}>
       {label ? <Text style={s.label}>{label}</Text> : null}
       <View style={[s.container, focused && s.containerFocused, !!error && s.containerError]}>
         {leadingIcon ? <View style={s.iconLeft}>{leadingIcon}</View> : null}
-        <TextInput
-          style={[s.input, leadingIcon ? s.inputPadLeft : null, isPassword || trailingIcon ? s.inputPadRight : null, style]}
-          secureTextEntry={actualHidden}
-          placeholderTextColor={C.textMuted}
-          cursorColor={C.accent}
-          selectionColor={C.accentDim}
-          autoCapitalize='none'
-          autoCorrect={false}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-          {...rest}
-        />
+        
+        <View style={{flex: 1, height: '100%', position: 'relative'}}>
+          {!hasText && placeholder ? (
+            <View
+              style={[
+                s.placeholderWrapper,
+                {
+                  paddingLeft: leadingIcon ? 8 : 16,
+                  paddingRight: (isPassword || trailingIcon) ? 8 : 16,
+                },
+              ]}
+              pointerEvents='none'
+            >
+              <Text numberOfLines={1} style={s.placeholderText}>{placeholder}</Text>
+            </View>
+          ) : null}
+          <TextInput
+            style={[
+              s.input,
+              {
+                paddingLeft: leadingIcon ? 8 : 16,
+                paddingRight: (isPassword || trailingIcon) ? 8 : 16,
+              },
+              style,
+            ]}
+            secureTextEntry={actualHidden}
+            cursorColor={C.accent}
+            selectionColor={C.accentDim}
+            autoCapitalize='none'
+            autoCorrect={false}
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
+            onChangeText={(text) => {
+              setLocalValue(text);
+              if (rest.onChangeText) {
+                rest.onChangeText(text);
+              }
+            }}
+            value={value !== undefined && value !== null ? String(value) : ''}
+            {...rest}
+          />
+        </View>
+
         {isPassword ? (
           <Pressable onPress={() => setHidden((h) => !h)} style={s.iconRight} hitSlop={10}>
             <EyeIcon hidden={hidden} />
@@ -94,12 +132,23 @@ const s = StyleSheet.create({
     flex: 1,
     height: '100%',
     fontFamily: Fonts.sans,
+    fontWeight: 'normal',
     fontSize: 15,
     color: C.textPrimary,
-    paddingHorizontal: 16,
   },
-  inputPadLeft: {paddingLeft: 8},
-  inputPadRight: {paddingRight: 8},
+  placeholderWrapper: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: 0,
+    bottom: 0,
+    justifyContent: 'center',
+  },
+  placeholderText: {
+    fontFamily: Fonts.sans,
+    fontSize: 15,
+    color: C.textMuted,
+  },
   iconLeft: {paddingLeft: 14, alignItems: 'center', justifyContent: 'center'},
   iconRight: {paddingRight: 14, height: '100%', alignItems: 'center', justifyContent: 'center'},
   error: {fontFamily: Fonts.sans, fontSize: 12, color: C.expense, marginTop: 2},

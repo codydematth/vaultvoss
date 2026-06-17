@@ -3,14 +3,12 @@ import {GoogleIcon} from '@/components/ui/google-icon';
 import {Input} from '@/components/ui/input';
 import {Text} from '@/components/ui/text';
 import {C} from '@/constants/colors';
+import {LoadingOverlay} from '@/components/ui/loading-overlay';
+import {ConfirmDialog} from '@/components/ui/confirm-dialog';
 import {Fonts} from '@/constants/theme';
 import {useGoogleAuth, useLogin} from '@/hooks/use-auth';
 import {zodResolver} from '@hookform/resolvers/zod';
-import * as Google from 'expo-auth-session/providers/google';
-import * as Haptics from 'expo-haptics';
-import {useFocusEffect, useRouter} from 'expo-router';
-import {IconSymbol} from '@/components/ui/icon-symbol';
-import * as WebBrowser from 'expo-web-browser';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 import {useCallback, useEffect, useState} from 'react';
 import {Controller, useForm} from 'react-hook-form';
 import {
@@ -28,8 +26,14 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {z} from 'zod';
 import * as LocalAuthentication from 'expo-local-authentication';
 import {storage} from '@/lib/storage';
+import * as Haptics from 'expo-haptics';
+import {useFocusEffect, useRouter} from 'expo-router';
+import {IconSymbol} from '@/components/ui/icon-symbol';
 
-WebBrowser.maybeCompleteAuthSession();
+GoogleSignin.configure({
+  webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
+  iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
+});
 
 const schema = z.object({
   email: z.string().min(1, 'Email is required').email('Enter a valid email address'),
@@ -43,26 +47,35 @@ export default function LoginScreen() {
   const [apiError, setApiError] = useState<string | null>(null);
   const loginMutation = useLogin();
   const googleAuthMutation = useGoogleAuth();
+  const [showBiometricConfirm, setShowBiometricConfirm] = useState(false);
+  const [tempCredentials, setTempCredentials] = useState<FormValues | null>(null);
 
   const {control, handleSubmit, formState: {errors}} = useForm<FormValues>({
     resolver: zodResolver(schema),
     defaultValues: {email: '', password: ''},
   });
 
-  const [, googleResponse, promptGoogleAsync] = Google.useAuthRequest({
-    clientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
-    iosClientId: process.env.EXPO_PUBLIC_GOOGLE_IOS_CLIENT_ID,
-    androidClientId: process.env.EXPO_PUBLIC_GOOGLE_ANDROID_CLIENT_ID,
-  });
-
-  useEffect(() => {
-    if (googleResponse?.type === 'success') {
-      const idToken = googleResponse.authentication?.idToken;
-      if (!idToken) { setApiError('Google sign-in failed. No token received.'); return; }
+  const signInWithGoogle = async () => {
+    try {
       setApiError(null);
+      await GoogleSignin.hasPlayServices();
+      try {
+        await GoogleSignin.signOut();
+      } catch (e) {
+        // Ignore signout error if already signed out
+      }
+      const userInfo = await GoogleSignin.signIn();
+      const idToken = userInfo.data?.idToken;
+      if (!idToken) {
+        setApiError('Google sign-in failed. No token received.');
+        return;
+      }
       googleAuthMutation.mutate({id_token: idToken}, {onError: (err) => setApiError(err.message)});
+    } catch (error: any) {
+      console.log('Google Sign-in error:', error);
+      setApiError(error?.message || 'Google sign-in failed.');
     }
-  }, [googleResponse]);
+  };
 
   const onSubmit = (values: FormValues) => {
     setApiError(null);
@@ -74,26 +87,8 @@ export default function LoginScreen() {
             const hasHardware = await LocalAuthentication.hasHardwareAsync();
             const isEnrolled = await LocalAuthentication.isEnrolledAsync();
             if (hasHardware && isEnrolled) {
-              Alert.alert(
-                'Enable Biometrics',
-                'Would you like to enable Face ID / Biometrics for faster logins next time?',
-                [
-                  { text: 'No', style: 'cancel' },
-                  {
-                    text: 'Yes',
-                    onPress: async () => {
-                      const scanResult = await LocalAuthentication.authenticateAsync({
-                        promptMessage: 'Confirm Face ID / Biometrics',
-                      });
-                      if (scanResult.success) {
-                        await storage.saveBiometricCredentials(values.email, values.password);
-                        await storage.setBiometricEnabled(true);
-                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                      }
-                    },
-                  },
-                ]
-              );
+              setTempCredentials(values);
+              setShowBiometricConfirm(true);
             }
           }
         } catch (err) {
@@ -181,7 +176,7 @@ export default function LoginScreen() {
     <View style={{flex: 1, backgroundColor: C.bg, paddingBottom: insets.bottom || 24}}>
       <View style={{height: insets.top + 16}} />
 
-      <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           style={{flex: 1}}
           contentContainerStyle={{paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, gap: 16}}
@@ -301,7 +296,7 @@ export default function LoginScreen() {
 
           {/* Google */}
           <TouchableOpacity
-            onPress={() => { setApiError(null); Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); promptGoogleAsync(); }}
+            onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); signInWithGoogle(); }}
             disabled={isLoading}
             activeOpacity={0.7}
             style={{
@@ -335,12 +330,38 @@ export default function LoginScreen() {
               marginTop: 12,
             }}>
             <Text variant='body' color='secondary'>
-              Don't have an account?{' '}
+              {"Don't have an account? "}
               <Text variant='body' style={{color: C.accent, fontFamily: Fonts.sansSemiBold}}>Sign Up</Text>
             </Text>
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+      <LoadingOverlay visible={isLoading} message="Signing in..." />
+      <ConfirmDialog
+        visible={showBiometricConfirm}
+        title="Enable Biometrics"
+        message="Would you like to enable Face ID / Biometrics for faster logins next time?"
+        confirmLabel="Yes"
+        cancelLabel="No"
+        onConfirm={async () => {
+          setShowBiometricConfirm(false);
+          if (tempCredentials) {
+            try {
+              const scanResult = await LocalAuthentication.authenticateAsync({
+                promptMessage: 'Confirm Face ID / Biometrics',
+              });
+              if (scanResult.success) {
+                await storage.saveBiometricCredentials(tempCredentials.email, tempCredentials.password);
+                await storage.setBiometricEnabled(true);
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+            } catch (err) {
+              console.log('Biometric opt-in scan error:', err);
+            }
+          }
+        }}
+        onCancel={() => setShowBiometricConfirm(false)}
+      />
     </View>
   );
 }

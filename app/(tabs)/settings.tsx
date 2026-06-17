@@ -2,6 +2,9 @@ import {Text} from '@/components/ui/text';
 import {C} from '@/constants/colors';
 import {Fonts} from '@/constants/theme';
 import {useLogout, useMe} from '@/hooks/use-auth';
+import {useState} from 'react';
+import {ConfirmDialog} from '@/components/ui/confirm-dialog';
+import {LoadingOverlay} from '@/components/ui/loading-overlay';
 import * as Haptics from 'expo-haptics';
 import {useRouter} from 'expo-router';
 import {IconSymbol} from '@/components/ui/icon-symbol';
@@ -16,6 +19,7 @@ const GRID_ITEMS = [
   {label: 'Analytics', sub: 'Reports & insights', icon: 'waveform.path.ecg', route: '/(tabs)/analytics'},
   {label: 'Security', sub: 'Biometrics & login', icon: 'lock.shield', route: '/security'},
   {label: 'Currency', sub: 'Set default symbol', icon: 'dollarsign', route: '/currency'},
+  {label: 'Notifications', sub: 'Alerts & reminders', icon: 'bell', route: '/notifications'},
 ] as const;
 
 export default function SettingsScreen() {
@@ -23,10 +27,11 @@ export default function SettingsScreen() {
   const router = useRouter();
   const {data: me} = useMe();
   const logoutMutation = useLogout();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   return (
     <View style={{flex: 1, backgroundColor: C.bg}}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 40}}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{paddingBottom: 110}}>
         {/* Header */}
         <View style={{paddingTop: insets.top + 16, paddingHorizontal: 20, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 28}}>
           <View style={{gap: 2}}>
@@ -65,8 +70,8 @@ export default function SettingsScreen() {
                 borderWidth: 1, borderColor: C.border,
                 padding: 20, gap: 28,
               }}>
-              <View style={{width: 44, height: 44, borderRadius: 14, backgroundColor: C.accentDim, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.accent + '11'}}>
-                <IconSymbol name={item.icon as any} size={22} color={C.accent} />
+              <View style={{width: 44, height: 44, borderRadius: 14, backgroundColor: C.brandBlueDim, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: C.brandBlue + '11'}}>
+                <IconSymbol name={item.icon as any} size={22} color={C.brandBlue} />
               </View>
               <View style={{gap: 3}}>
                 <Text variant='subheading' color='primary'>{item.label}</Text>
@@ -81,19 +86,7 @@ export default function SettingsScreen() {
           <TouchableOpacity
             onPress={() => {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-              Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-                {text: 'Cancel', style: 'cancel'},
-                {
-                  text: 'Sign Out', style: 'destructive',
-                  onPress: () => {
-                    logoutMutation.mutate(undefined, {
-                      onSuccess: () => {
-                        router.replace('/login');
-                      },
-                    });
-                  }
-                }
-              ]);
+              setShowLogoutConfirm(true);
             }}
             activeOpacity={0.75}
             style={{
@@ -106,6 +99,24 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <LoadingOverlay visible={logoutMutation.isPending} message="Signing out..." />
+      <ConfirmDialog
+        visible={showLogoutConfirm}
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        confirmLabel="Sign Out"
+        cancelLabel="Cancel"
+        isDestructive
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          logoutMutation.mutate(undefined, {
+            onSuccess: () => {
+              router.replace('/login');
+            },
+          });
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </View>
   );
 }

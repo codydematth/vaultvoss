@@ -44,7 +44,11 @@ apiClient.interceptors.response.use(
       _retry?: boolean;
     };
 
-    if (error.response?.status !== 401 || config._retry) {
+    const url = config?.url ?? '';
+    const isPublicAuth = url.startsWith('/auth/') && url !== '/auth/me' && url !== '/auth/logout';
+    const isRegister = url === '/users/' && config?.method?.toLowerCase() === 'post';
+
+    if (error.response?.status !== 401 || config?._retry || isPublicAuth || isRegister) {
       return Promise.reject(error);
     }
 

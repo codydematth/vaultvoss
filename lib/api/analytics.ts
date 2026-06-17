@@ -3,7 +3,7 @@ import type {
   AnalyticsByPeriodParams,
   AnalyticsSummary,
   ApiResponse,
-  CategoryBreakdownItem,
+  CategoryBreakdownResponse,
   MonthlyDataPoint,
 } from './types';
 
@@ -12,7 +12,7 @@ export const analyticsApi = {
     apiClient.get<ApiResponse<AnalyticsSummary>>('/analytics/summary', {params}),
 
   byCategory: (params?: AnalyticsByPeriodParams) =>
-    apiClient.get<ApiResponse<CategoryBreakdownItem[]>>('/analytics/by-category', {params}),
+    apiClient.get<ApiResponse<CategoryBreakdownResponse>>('/analytics/by-category', {params}),
 
   monthly: (params?: {months?: number; currency?: string}) =>
     apiClient.get<ApiResponse<MonthlyDataPoint[]>>('/analytics/monthly', {params}),

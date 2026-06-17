@@ -50,9 +50,7 @@ export default function PrivacyScreen() {
         </Text>
 
         <Text variant="body" color="secondary" style={styles.paragraph}>
-          VaultVoss ("us", "we", or "our") respects your privacy. This Privacy
-          Policy describes how we collect, protect, and use your information
-          when you use our mobile application ("App").
+          {'VaultVoss ("us", "we", or "our") respects your privacy. This Privacy Policy describes how we collect, protect, and use your information when you use our mobile application ("App").'}
         </Text>
 
         {/* Section 1 */}
@@ -60,8 +58,7 @@ export default function PrivacyScreen() {
           1. Information We Collect
         </Text>
         <Text variant="body" color="secondary" style={styles.paragraph}>
-          We only collect information necessary to provide and improve the App's
-          services. This includes:
+          {"We only collect information necessary to provide and improve the App's services. This includes:"}
         </Text>
         <Text
           variant="body"
@@ -104,13 +101,7 @@ export default function PrivacyScreen() {
           2. Biometric & Secure Credentials
         </Text>
         <Text variant="body" color="secondary" style={styles.paragraph}>
-          When you enable biometric login (like Face ID or Touch ID), your raw
-          biometric data is processed entirely by your device's operating system
-          security chip (Secure Enclave or Keychain). VaultVoss never has access
-          to, stores, or transmits your actual biometric data. We securely cache
-          your verified email and password credentials in the operating system's
-          secure store (Keychain/KeyStore) via industry-standard encryption for
-          local authentication checks.
+          {"When you enable biometric login (like Face ID or Touch ID), your raw biometric data is processed entirely by your device's operating system security chip (Secure Enclave or Keychain). VaultVoss never has access to, stores, or transmits your actual biometric data. We securely cache your verified email and password credentials in the operating system's secure store (Keychain/KeyStore) via industry-standard encryption for local authentication checks."}
         </Text>
 
         {/* Section 3 */}

@@ -9,6 +9,7 @@ import type {
 } from '@/lib/api/types';
 import {useAuthContext} from '@/lib/auth/auth-context';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
+import {storage} from '@/lib/storage';
 
 export const AUTH_KEYS = {
   me: ['auth', 'me'] as const,
@@ -78,6 +79,11 @@ export function useRegister() {
     },
 
     onSuccess: async (data) => {
+      try {
+        await storage.setCurrencyPreference('USD');
+      } catch (e) {
+        console.warn('Failed to set default currency preference:', e);
+      }
       await setSession(data.access_token, data.refresh_token);
     },
   });

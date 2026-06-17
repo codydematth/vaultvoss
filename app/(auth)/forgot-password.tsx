@@ -45,7 +45,7 @@ export default function ForgotPasswordScreen() {
         </Pressable>
       </View>
 
-      <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           style={{flex: 1}}
           contentContainerStyle={{paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, gap: 24}}
@@ -57,7 +57,7 @@ export default function ForgotPasswordScreen() {
               <IconSymbol name='lock.rotation' size={28} color={C.accent} />
             </View>
             <Text variant='heading' color='primary'>Reset Password</Text>
-            <Text variant='body' color='secondary'>Enter your email and we'll send you a reset code.</Text>
+            <Text variant='body' color='secondary'>{"Enter your email and we'll send you a reset code."}</Text>
           </View>
 
           {sent ? (
