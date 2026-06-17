@@ -112,7 +112,7 @@ export default function VerifyOtpScreen() {
         </Pressable>
       </View>
 
-      <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={{flex: 1}} behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
         <ScrollView
           style={{flex: 1}}
           contentContainerStyle={{paddingHorizontal: 24, paddingTop: 24, paddingBottom: 24, gap: 32}}

@@ -16,6 +16,7 @@
     "build-development-apk": "eas build --profile development --platform android",
     "build-development-ios": "eas build --profile development --platform ios",
     "publish-app": "eas update --branch main --message 'New Update'",
+    "publish-app-preview": "eas update --branch preview --message 'New Update'",
     "configure-eas": "eas update:configure"
   },
   "dependencies": {
