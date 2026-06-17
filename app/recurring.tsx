@@ -7,6 +7,7 @@ import {useDeleteRecurring, useRecurringTransactions, useTriggerRecurring} from 
 import * as Haptics from 'expo-haptics';
 import {useRouter} from 'expo-router';
 import {IconSymbol} from '@/components/ui/icon-symbol';
+import {ConfirmDialog} from '@/components/ui/confirm-dialog';
 import {ActivityIndicator, Alert, RefreshControl, ScrollView, TouchableOpacity, View, Modal, Pressable} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useToast} from '@/components/ui/toast';
@@ -22,6 +23,8 @@ export default function RecurringScreen() {
   const deleteMutation = useDeleteRecurring();
   const triggerMutation = useTriggerRecurring();
   const [refreshing, setRefreshing] = useState(false);
+  const [triggerItem, setTriggerItem] = useState<{id: string, name: string} | null>(null);
+  const [deleteItem, setDeleteItem] = useState<{id: string, name: string} | null>(null);
 
   const onRefresh = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -32,23 +35,7 @@ export default function RecurringScreen() {
 
   const handleTrigger = (id: string, name: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert('Trigger Now', `Do you want to manually create a transaction from "${name}" right now?`, [
-      {text: 'Cancel', style: 'cancel'},
-      {
-        text: 'Trigger',
-        onPress: () => {
-          triggerMutation.mutate(id, {
-            onSuccess: () => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              showToast({message: `Triggered transaction for "${name}"`, type: 'success'});
-            },
-            onError: (err) => {
-              showToast({message: err.message, type: 'error'});
-            },
-          });
-        },
-      },
-    ]);
+    setTriggerItem({id, name});
   };
 
   const handleEdit = (id: string) => {
@@ -58,24 +45,7 @@ export default function RecurringScreen() {
 
   const handleDelete = (id: string, name: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Alert.alert('Delete', `Are you sure you want to delete recurring template "${name}"?`, [
-      {text: 'Cancel', style: 'cancel'},
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          deleteMutation.mutate(id, {
-            onSuccess: () => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              showToast({message: `Deleted recurring "${name}"`, type: 'success'});
-            },
-            onError: (err) => {
-              showToast({message: err.message, type: 'error'});
-            },
-          });
-        },
-      },
-    ]);
+    setDeleteItem({id, name});
   };
 
   // Calculate monthly projection of all recurring items
@@ -442,6 +412,55 @@ export default function RecurringScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <ConfirmDialog
+        visible={!!triggerItem}
+        title="Trigger Now"
+        message={triggerItem ? `Do you want to manually create a transaction from "${triggerItem.name}" right now?` : ''}
+        confirmLabel="Trigger"
+        cancelLabel="Cancel"
+        onConfirm={() => {
+          if (triggerItem) {
+            const {id, name} = triggerItem;
+            setTriggerItem(null);
+            triggerMutation.mutate(id, {
+              onSuccess: () => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                showToast({message: `Triggered transaction for "${name}"`, type: 'success'});
+              },
+              onError: (err) => {
+                showToast({message: err.message, type: 'error'});
+              },
+            });
+          }
+        }}
+        onCancel={() => setTriggerItem(null)}
+      />
+
+      <ConfirmDialog
+        visible={!!deleteItem}
+        title="Delete Template"
+        message={deleteItem ? `Are you sure you want to delete recurring template "${deleteItem.name}"?` : ''}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isDestructive
+        onConfirm={() => {
+          if (deleteItem) {
+            const {id, name} = deleteItem;
+            setDeleteItem(null);
+            deleteMutation.mutate(id, {
+              onSuccess: () => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                showToast({message: `Deleted recurring "${name}"`, type: 'success'});
+              },
+              onError: (err) => {
+                showToast({message: err.message, type: 'error'});
+              },
+            });
+          }
+        }}
+        onCancel={() => setDeleteItem(null)}
+      />
     </View>
   );
 }

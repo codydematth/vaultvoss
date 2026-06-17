@@ -7,10 +7,11 @@ import {useDeleteNetWorthItem, useNetWorth, useSnapshotNetWorth} from '@/hooks/u
 import * as Haptics from 'expo-haptics';
 import {useRouter} from 'expo-router';
 import {IconSymbol, IconSymbolName} from '@/components/ui/icon-symbol';
-import {ActivityIndicator, Alert, RefreshControl, ScrollView, TouchableOpacity, View, Modal, Pressable} from 'react-native';
+import {ActivityIndicator, RefreshControl, ScrollView, TouchableOpacity, View, Modal, Pressable} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useToast} from '@/components/ui/toast';
 import {useCurrency} from '@/lib/currency-context';
+import {ConfirmDialog} from '@/components/ui/confirm-dialog';
 
 function getNetWorthIcon(name: string, type: 'asset' | 'liability'): IconSymbolName {
   const n = name.toLowerCase();
@@ -37,6 +38,8 @@ export default function NetWorthScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const [showInfo, setShowInfo] = useState(false);
+  const [snapshotConfirmVisible, setSnapshotConfirmVisible] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{id: string; name: string} | null>(null);
   const {data: summary, isLoading, refetch} = useNetWorth();
   const deleteMutation = useDeleteNetWorthItem();
   const snapshotMutation = useSnapshotNetWorth();
@@ -53,21 +56,7 @@ export default function NetWorthScreen() {
 
   const handleSnapshot = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    Alert.alert('Take Snapshot', 'This will save a point-in-time record of your net worth. Continue?', [
-      {text: 'Cancel', style: 'cancel'},
-      {
-        text: 'Snapshot',
-        onPress: () => {
-          snapshotMutation.mutate(undefined, {
-            onSuccess: () => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              showToast({message: 'Snapshot saved successfully', type: 'success'});
-            },
-            onError: (err) => showToast({message: err.message, type: 'error'}),
-          });
-        },
-      },
-    ]);
+    setSnapshotConfirmVisible(true);
   };
 
   const handleEdit = (id: string) => {
@@ -77,24 +66,7 @@ export default function NetWorthScreen() {
 
   const handleDelete = (id: string, name: string) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Alert.alert('Delete Item', `Are you sure you want to delete "${name}"?`, [
-      {text: 'Cancel', style: 'cancel'},
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          deleteMutation.mutate(id, {
-            onSuccess: () => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              showToast({message: `Deleted "${name}"`, type: 'success'});
-            },
-            onError: (err) => {
-              showToast({message: err.message, type: 'error'});
-            },
-          });
-        },
-      },
-    ]);
+    setItemToDelete({id, name});
   };
 
   const assets = summary?.items?.filter((i) => i.item_type === 'asset') ?? [];
@@ -542,6 +514,48 @@ export default function NetWorthScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <ConfirmDialog
+        visible={snapshotConfirmVisible}
+        title="Take Snapshot"
+        message="This will save a point-in-time record of your net worth. Continue?"
+        confirmLabel="Snapshot"
+        onConfirm={() => {
+          setSnapshotConfirmVisible(false);
+          snapshotMutation.mutate(undefined, {
+            onSuccess: () => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              showToast({message: 'Snapshot saved successfully', type: 'success'});
+            },
+            onError: (err) => showToast({message: err.message, type: 'error'}),
+          });
+        }}
+        onCancel={() => setSnapshotConfirmVisible(false)}
+      />
+
+      <ConfirmDialog
+        visible={itemToDelete !== null}
+        title="Delete Item"
+        message={`Are you sure you want to delete "${itemToDelete?.name}"?`}
+        confirmLabel="Delete"
+        isDestructive
+        onConfirm={() => {
+          if (itemToDelete) {
+            const {id, name} = itemToDelete;
+            setItemToDelete(null);
+            deleteMutation.mutate(id, {
+              onSuccess: () => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                showToast({message: `Deleted "${name}"`, type: 'success'});
+              },
+              onError: (err) => {
+                showToast({message: err.message, type: 'error'});
+              },
+            });
+          }
+        }}
+        onCancel={() => setItemToDelete(null)}
+      />
     </View>
   );
 }

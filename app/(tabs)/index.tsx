@@ -575,16 +575,18 @@ export default function HomeScreen() {
           {txLoading ? (
             <ActivityIndicator color={C.accent} />
           ) : transactions?.length ? (
-            transactions.map((tx) => (
-              <TransactionRow
-                key={tx.id}
-                item={tx}
-                onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                  (router as any).push(`/transaction/${tx.id}`);
-                }}
-              />
-            ))
+            [...transactions]
+              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .map((tx) => (
+                <TransactionRow
+                  key={tx.id}
+                  item={tx}
+                  onPress={() => {
+                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    (router as any).push(`/transaction/${tx.id}`);
+                  }}
+                />
+              ))
           ) : (
             <View
               style={{

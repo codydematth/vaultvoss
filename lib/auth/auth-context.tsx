@@ -9,6 +9,7 @@ import React, {
 import {authApi} from '../api/auth';
 import type {User} from '../api/types';
 import {storage} from '../storage';
+import {GoogleSignin} from '@react-native-google-signin/google-signin';
 
 // ─── Context shape ────────────────────────────────────────────────────────────
 
@@ -130,7 +131,17 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
       await authApi.logout();
     } catch {}
 
-    await Promise.all([storage.clearTokens(), storage.clearUser()]);
+    try {
+      await GoogleSignin.signOut();
+    } catch (err) {
+      console.log('Failed to sign out of Google:', err);
+    }
+
+    await Promise.all([
+      storage.clearTokens(),
+      storage.clearUser(),
+      storage.setCurrencyPreference('USD'),
+    ]);
 
     setState({
       user: null,

@@ -54,6 +54,18 @@ function InitialLayout() {
     })();
   }, []);
 
+  // Re-check onboarding status if segments change and it's marked false
+  useEffect(() => {
+    (async () => {
+      if (onboardingCompleted === false) {
+        const completed = await storage.getOnboardingCompleted().catch(() => false);
+        if (completed) {
+          setOnboardingCompleted(true);
+        }
+      }
+    })();
+  }, [segments, onboardingCompleted]);
+
   // Request notification permissions on first launch
   useEffect(() => {
     requestPermissions().catch(() => {});

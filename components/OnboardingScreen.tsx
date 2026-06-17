@@ -71,7 +71,7 @@ export default function OnboardingScreen() {
       try {
         await storage.setOnboardingCompleted();
       } catch {}
-      router.replace('/login');
+      router.replace('/sign-up');
     }
   };
 

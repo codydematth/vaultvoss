@@ -13,6 +13,8 @@ import * as Haptics from "expo-haptics";
 import * as ImagePicker from "expo-image-picker";
 import { useRouter } from "expo-router";
 import { useState } from "react";
+import { LoadingOverlay } from "@/components/ui/loading-overlay";
+import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import {
   Alert,
   Image,
@@ -42,6 +44,8 @@ export default function ProfileScreen() {
   const [newPw, setNewPw] = useState("");
   const [pwLoading, setPwLoading] = useState(false);
   const [pwError, setPwError] = useState<string | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   const handlePickImage = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -147,25 +151,7 @@ export default function ProfileScreen() {
 
   const handleDeleteAccount = () => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-    Alert.alert(
-      "Delete Account",
-      "This will permanently delete your account and all data. This cannot be undone.",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: async () => {
-            if (user?.id) {
-              try {
-                await usersApi.deleteById(user.id);
-              } catch {}
-            }
-            await clearSession();
-          },
-        },
-      ],
-    );
+    setShowDeleteConfirm(true);
   };
 
   return (
@@ -418,6 +404,27 @@ export default function ProfileScreen() {
           </View>
         </ScrollView>
       </KeyboardAvoidingView>
+      <LoadingOverlay visible={deleteLoading} message="Deleting account..." />
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        title="Delete Account"
+        message="This will permanently delete your account and all data. This cannot be undone."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isDestructive
+        onConfirm={async () => {
+          setShowDeleteConfirm(false);
+          setDeleteLoading(true);
+          if (user?.id) {
+            try {
+              await usersApi.deleteById(user.id);
+            } catch {}
+          }
+          await clearSession();
+          setDeleteLoading(false);
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </View>
   );
 }

@@ -3,6 +3,8 @@ import {GoogleIcon} from '@/components/ui/google-icon';
 import {Input} from '@/components/ui/input';
 import {Text} from '@/components/ui/text';
 import {C} from '@/constants/colors';
+import {LoadingOverlay} from '@/components/ui/loading-overlay';
+import {ConfirmDialog} from '@/components/ui/confirm-dialog';
 import {Fonts} from '@/constants/theme';
 import {useGoogleAuth, useLogin} from '@/hooks/use-auth';
 import {zodResolver} from '@hookform/resolvers/zod';
@@ -45,6 +47,8 @@ export default function LoginScreen() {
   const [apiError, setApiError] = useState<string | null>(null);
   const loginMutation = useLogin();
   const googleAuthMutation = useGoogleAuth();
+  const [showBiometricConfirm, setShowBiometricConfirm] = useState(false);
+  const [tempCredentials, setTempCredentials] = useState<FormValues | null>(null);
 
   const {control, handleSubmit, formState: {errors}} = useForm<FormValues>({
     resolver: zodResolver(schema),
@@ -55,6 +59,11 @@ export default function LoginScreen() {
     try {
       setApiError(null);
       await GoogleSignin.hasPlayServices();
+      try {
+        await GoogleSignin.signOut();
+      } catch (e) {
+        // Ignore signout error if already signed out
+      }
       const userInfo = await GoogleSignin.signIn();
       const idToken = userInfo.data?.idToken;
       if (!idToken) {
@@ -78,26 +87,8 @@ export default function LoginScreen() {
             const hasHardware = await LocalAuthentication.hasHardwareAsync();
             const isEnrolled = await LocalAuthentication.isEnrolledAsync();
             if (hasHardware && isEnrolled) {
-              Alert.alert(
-                'Enable Biometrics',
-                'Would you like to enable Face ID / Biometrics for faster logins next time?',
-                [
-                  { text: 'No', style: 'cancel' },
-                  {
-                    text: 'Yes',
-                    onPress: async () => {
-                      const scanResult = await LocalAuthentication.authenticateAsync({
-                        promptMessage: 'Confirm Face ID / Biometrics',
-                      });
-                      if (scanResult.success) {
-                        await storage.saveBiometricCredentials(values.email, values.password);
-                        await storage.setBiometricEnabled(true);
-                        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-                      }
-                    },
-                  },
-                ]
-              );
+              setTempCredentials(values);
+              setShowBiometricConfirm(true);
             }
           }
         } catch (err) {
@@ -345,6 +336,32 @@ export default function LoginScreen() {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+      <LoadingOverlay visible={isLoading} message="Signing in..." />
+      <ConfirmDialog
+        visible={showBiometricConfirm}
+        title="Enable Biometrics"
+        message="Would you like to enable Face ID / Biometrics for faster logins next time?"
+        confirmLabel="Yes"
+        cancelLabel="No"
+        onConfirm={async () => {
+          setShowBiometricConfirm(false);
+          if (tempCredentials) {
+            try {
+              const scanResult = await LocalAuthentication.authenticateAsync({
+                promptMessage: 'Confirm Face ID / Biometrics',
+              });
+              if (scanResult.success) {
+                await storage.saveBiometricCredentials(tempCredentials.email, tempCredentials.password);
+                await storage.setBiometricEnabled(true);
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              }
+            } catch (err) {
+              console.log('Biometric opt-in scan error:', err);
+            }
+          }
+        }}
+        onCancel={() => setShowBiometricConfirm(false)}
+      />
     </View>
   );
 }

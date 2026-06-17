@@ -7,6 +7,7 @@ import {useBudgetGoalStatus, useBudgetGoals, useDeleteBudgetGoal} from '@/hooks/
 import * as Haptics from 'expo-haptics';
 import {useRouter} from 'expo-router';
 import {IconSymbol} from '@/components/ui/icon-symbol';
+import {ConfirmDialog} from '@/components/ui/confirm-dialog';
 import {ActivityIndicator, Alert, RefreshControl, ScrollView, TouchableOpacity, View, Modal, Pressable} from 'react-native';
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useToast} from '@/components/ui/toast';
@@ -155,6 +156,7 @@ export default function BudgetGoalsScreen() {
   const {data: goals, isLoading, refetch} = useBudgetGoals();
   const deleteMutation = useDeleteBudgetGoal();
   const [refreshing, setRefreshing] = useState(false);
+  const [deleteGoal, setDeleteGoal] = useState<BudgetGoal | null>(null);
 
   const onRefresh = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -170,24 +172,7 @@ export default function BudgetGoalsScreen() {
 
   const handleDelete = (goal: BudgetGoal) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Alert.alert('Delete Goal', `Are you sure you want to delete "${goal.name}"?`, [
-      {text: 'Cancel', style: 'cancel'},
-      {
-        text: 'Delete',
-        style: 'destructive',
-        onPress: () => {
-          deleteMutation.mutate(goal.id, {
-            onSuccess: () => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              showToast({message: `Deleted budget goal "${goal.name}"`, type: 'success'});
-            },
-            onError: (err) => {
-              showToast({message: err.message, type: 'error'});
-            },
-          });
-        },
-      },
-    ]);
+    setDeleteGoal(goal);
   };
 
   const activeGoals = goals?.filter((g) => g.is_active) ?? [];
@@ -391,6 +376,31 @@ export default function BudgetGoalsScreen() {
           </Pressable>
         </Pressable>
       </Modal>
+
+      <ConfirmDialog
+        visible={!!deleteGoal}
+        title="Delete Goal"
+        message={deleteGoal ? `Are you sure you want to delete "${deleteGoal.name}"?` : ''}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isDestructive
+        onConfirm={() => {
+          if (deleteGoal) {
+            const {id, name} = deleteGoal;
+            setDeleteGoal(null);
+            deleteMutation.mutate(id, {
+              onSuccess: () => {
+                Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+                showToast({message: `Deleted budget goal "${name}"`, type: 'success'});
+              },
+              onError: (err) => {
+                showToast({message: err.message, type: 'error'});
+              },
+            });
+          }
+        }}
+        onCancel={() => setDeleteGoal(null)}
+      />
     </View>
   );
 }

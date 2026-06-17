@@ -95,12 +95,6 @@ function useRawTransactions() {
         const txns = data.data || [];
         return txns;
       } catch (err: any) {
-        console.error("[RAW TXNS] FULL ERROR:", {
-          status: err.response?.status,
-          statusText: err.response?.statusText,
-          data: err.response?.data,
-          message: err.message,
-        });
         throw err;
       }
     },

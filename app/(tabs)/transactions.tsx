@@ -35,14 +35,36 @@ const EXPENSE_CATS: ExpenseCategory[] = ['Food', 'Transport', 'Shopping', 'Enter
 const INCOME_CATS: IncomeCategory[] = ['Salary', 'Freelance', 'Gift', 'Investment', 'Other'];
 
 function groupByDate(txns: Transaction[]) {
-  const groups: Record<string, Transaction[]> = {};
-  for (const t of txns) {
+  // 1. Sort all transactions descending by their actual creation time
+  const sortedTxns = [...txns].sort((a, b) => {
+    const timeA = new Date(a.created_at).getTime();
+    const timeB = new Date(b.created_at).getTime();
+    return timeB - timeA;
+  });
+
+  // 2. Group them by their transaction date (YYYY-MM-DD)
+  const groups: Record<string, { label: string; data: Transaction[] }> = {};
+  for (const t of sortedTxns) {
     const dateKey = t.date ?? t.created_at?.split('T')[0] ?? 'Unknown';
     const label = formatDateLabel(dateKey);
-    if (!groups[label]) groups[label] = [];
-    groups[label].push(t);
+    if (!groups[dateKey]) {
+      groups[dateKey] = { label, data: [] };
+    }
+    groups[dateKey].data.push(t);
   }
-  return Object.entries(groups).map(([title, data]) => ({title, data}));
+
+  // 3. Map groups into section list shape and sort the days descending
+  return Object.entries(groups)
+    .map(([dateKey, group]) => ({
+      title: group.label,
+      data: group.data,
+      dateKey,
+    }))
+    .sort((s1, s2) => {
+      if (s1.dateKey === 'Unknown') return 1;
+      if (s2.dateKey === 'Unknown') return -1;
+      return s2.dateKey.localeCompare(s1.dateKey);
+    });
 }
 
 function formatDateLabel(dateStr: string) {
@@ -229,14 +251,19 @@ export default function TransactionsScreen() {
         <View style={{flexDirection: 'row', gap: 10, marginBottom: 14}}>
           <View style={{flex: 1, flexDirection: 'row', alignItems: 'center', backgroundColor: C.bgCard, borderRadius: 14, borderWidth: 1, borderColor: C.border, paddingHorizontal: 14, height: 48, gap: 10}}>
             <IconSymbol name='magnifyingglass' size={18} color={C.textSecondary} />
-            <TextInput
-              style={{flex: 1, fontFamily: Fonts.sans, fontSize: 15, color: C.textPrimary}}
-              placeholder='Search transactions…'
-              placeholderTextColor={C.textMuted}
-              value={search}
-              onChangeText={setSearch}
-              returnKeyType='search'
-            />
+            <View style={{flex: 1, height: '100%', position: 'relative', justifyContent: 'center'}}>
+              {!search ? (
+                <View style={{position: 'absolute', left: 0, right: 0, justifyContent: 'center'}} pointerEvents="none">
+                  <Text style={{fontFamily: Fonts.sans, fontSize: 15, color: C.textMuted}}>Search transactions…</Text>
+                </View>
+              ) : null}
+              <TextInput
+                style={{flex: 1, fontFamily: Fonts.sans, fontWeight: 'normal', fontSize: 15, color: C.textPrimary}}
+                value={search}
+                onChangeText={setSearch}
+                returnKeyType='search'
+              />
+            </View>
             {search ? (
               <Pressable onPress={() => { Haptics.selectionAsync(); setSearch(''); }} hitSlop={8}>
                 <IconSymbol name='xmark.circle.fill' size={18} color={C.textSecondary} />

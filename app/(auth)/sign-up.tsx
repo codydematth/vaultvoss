@@ -3,6 +3,7 @@ import {Checkbox} from '@/components/ui/checkbox';
 import {Input} from '@/components/ui/input';
 import {Text} from '@/components/ui/text';
 import {C} from '@/constants/colors';
+import {LoadingOverlay} from '@/components/ui/loading-overlay';
 import {Fonts} from '@/constants/theme';
 import {useRegister} from '@/hooks/use-auth';
 import {zodResolver} from '@hookform/resolvers/zod';
@@ -184,6 +185,7 @@ export default function SignUpScreen() {
           </TouchableOpacity>
         </ScrollView>
       </KeyboardAvoidingView>
+      <LoadingOverlay visible={registerMutation.isPending} message="Creating account..." />
     </View>
   );
 }

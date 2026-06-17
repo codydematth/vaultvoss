@@ -266,7 +266,7 @@ export default function SecurityScreen() {
       {/* Password Confirmation Modal */}
       <Modal visible={confirmVisible} transparent animationType="slide" onRequestClose={() => setConfirmVisible(false)}>
         <Pressable style={{flex: 1, backgroundColor: C.overlay}} onPress={() => setConfirmVisible(false)} />
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'}>
           <View
             style={{
               backgroundColor: C.bgCard,

@@ -2,6 +2,9 @@ import {Text} from '@/components/ui/text';
 import {C} from '@/constants/colors';
 import {Fonts} from '@/constants/theme';
 import {useLogout, useMe} from '@/hooks/use-auth';
+import {useState} from 'react';
+import {ConfirmDialog} from '@/components/ui/confirm-dialog';
+import {LoadingOverlay} from '@/components/ui/loading-overlay';
 import * as Haptics from 'expo-haptics';
 import {useRouter} from 'expo-router';
 import {IconSymbol} from '@/components/ui/icon-symbol';
@@ -24,6 +27,7 @@ export default function SettingsScreen() {
   const router = useRouter();
   const {data: me} = useMe();
   const logoutMutation = useLogout();
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
 
   return (
     <View style={{flex: 1, backgroundColor: C.bg}}>
@@ -82,19 +86,7 @@ export default function SettingsScreen() {
           <TouchableOpacity
             onPress={() => {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-              Alert.alert('Sign Out', 'Are you sure you want to sign out?', [
-                {text: 'Cancel', style: 'cancel'},
-                {
-                  text: 'Sign Out', style: 'destructive',
-                  onPress: () => {
-                    logoutMutation.mutate(undefined, {
-                      onSuccess: () => {
-                        router.replace('/login');
-                      },
-                    });
-                  }
-                }
-              ]);
+              setShowLogoutConfirm(true);
             }}
             activeOpacity={0.75}
             style={{
@@ -107,6 +99,24 @@ export default function SettingsScreen() {
           </TouchableOpacity>
         </View>
       </ScrollView>
+      <LoadingOverlay visible={logoutMutation.isPending} message="Signing out..." />
+      <ConfirmDialog
+        visible={showLogoutConfirm}
+        title="Sign Out"
+        message="Are you sure you want to sign out?"
+        confirmLabel="Sign Out"
+        cancelLabel="Cancel"
+        isDestructive
+        onConfirm={() => {
+          setShowLogoutConfirm(false);
+          logoutMutation.mutate(undefined, {
+            onSuccess: () => {
+              router.replace('/login');
+            },
+          });
+        }}
+        onCancel={() => setShowLogoutConfirm(false)}
+      />
     </View>
   );
 }

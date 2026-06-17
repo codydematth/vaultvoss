@@ -8,6 +8,7 @@ import * as Haptics from 'expo-haptics';
 import {useLocalSearchParams, useRouter} from 'expo-router';
 import {IconSymbol} from '@/components/ui/icon-symbol';
 import {useState, useEffect} from 'react';
+import {ConfirmDialog} from '@/components/ui/confirm-dialog';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -47,6 +48,7 @@ export default function EditTransactionScreen() {
   const [note, setNote] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [hasInitialized, setHasInitialized] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
 
   useEffect(() => {
     if (transaction && !hasInitialized) {
@@ -71,24 +73,7 @@ export default function EditTransactionScreen() {
 
   const handleDelete = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Alert.alert('Delete Transaction', `Are you sure you want to delete "${name}"?`, [
-      {text: 'Cancel', style: 'cancel'},
-      {
-        text: 'Delete', style: 'destructive',
-        onPress: () => {
-          deleteMutation.mutate(id, {
-            onSuccess: () => {
-              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-              showToast({message: `Deleted transaction "${name}"`, type: 'success'});
-              router.back();
-            },
-            onError: (err) => {
-              showToast({message: err.message, type: 'error'});
-            }
-          });
-        },
-      },
-    ]);
+    setShowDeleteConfirm(true);
   };
 
   const handleSubmit = () => {
@@ -171,7 +156,7 @@ export default function EditTransactionScreen() {
 
       <KeyboardAvoidingView 
         style={{flex: 1}} 
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <ScrollView 
           showsVerticalScrollIndicator={false} 
@@ -294,6 +279,28 @@ export default function EditTransactionScreen() {
           />
         </ScrollView>
       </KeyboardAvoidingView>
+      <ConfirmDialog
+        visible={showDeleteConfirm}
+        title="Delete Transaction"
+        message={`Are you sure you want to delete "${name}"?`}
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        isDestructive
+        onConfirm={() => {
+          setShowDeleteConfirm(false);
+          deleteMutation.mutate(id, {
+            onSuccess: () => {
+              Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+              showToast({message: `Deleted transaction "${name}"`, type: 'success'});
+              router.back();
+            },
+            onError: (err) => {
+              showToast({message: err.message, type: 'error'});
+            }
+          });
+        }}
+        onCancel={() => setShowDeleteConfirm(false)}
+      />
     </View>
   );
 }
