@@ -539,22 +539,24 @@ export default function NetWorthScreen() {
         message={`Are you sure you want to delete "${itemToDelete?.name}"?`}
         confirmLabel="Delete"
         isDestructive
+        loading={deleteMutation.isPending}
         onConfirm={() => {
           if (itemToDelete) {
             const {id, name} = itemToDelete;
-            setItemToDelete(null);
             deleteMutation.mutate(id, {
               onSuccess: () => {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 showToast({message: `Deleted "${name}"`, type: 'success'});
+                setItemToDelete(null);
               },
               onError: (err) => {
                 showToast({message: err.message, type: 'error'});
+                setItemToDelete(null);
               },
             });
           }
         }}
-        onCancel={() => setItemToDelete(null)}
+        onCancel={() => !deleteMutation.isPending && setItemToDelete(null)}
       />
     </View>
   );

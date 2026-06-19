@@ -12,26 +12,26 @@ import {ActivityIndicator, Alert, RefreshControl, ScrollView, TouchableOpacity, 
 import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useToast} from '@/components/ui/toast';
 import {useCurrency} from '@/lib/currency-context';
-import type {BudgetGoal} from '@/lib/api/types';
+import type {BudgetGoal, BudgetGoalStatus} from '@/lib/api/types';
 
 function GoalCard({
-  goal,
+  status,
   onEdit,
   onDelete,
 }: {
-  goal: BudgetGoal;
+  status: BudgetGoalStatus;
   onEdit: (goal: BudgetGoal) => void;
   onDelete: (goal: BudgetGoal) => void;
 }) {
-  const {data: status, isLoading} = useBudgetGoalStatus(goal.id);
+  const goal = status.goal;
   const {formatMoney, convert, currency: preferredCurrency} = useCurrency();
 
   const goalCurrency = goal.currency || 'USD';
   const convertedLimit = convert(Number(goal.amount), goalCurrency, preferredCurrency);
-  const spent = status?.spent ?? 0;
+  const spent = status.spent ?? 0;
   const convertedSpent = convert(spent, goalCurrency, preferredCurrency);
-  const percentage = status?.percentage_used ?? 0;
-  const isOverBudget = status?.is_over_budget ?? false;
+  const percentage = status.percentage_used ?? 0;
+  const isOverBudget = status.is_over_budget ?? false;
   const convertedRemaining = convertedLimit - convertedSpent;
 
   const pct = Math.min(percentage, 100);
@@ -73,33 +73,29 @@ function GoalCard({
       </View>
 
       {/* Progress Bar & Status Info */}
-      {isLoading ? (
-        <ActivityIndicator color={C.accent} size="small" style={{alignSelf: 'flex-start', marginVertical: 8}} />
-      ) : (
-        <View style={{gap: 6}}>
-          <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
-            <Text variant="caption" color="secondary">
-              {formatMoney(convertedSpent)} spent
-            </Text>
-            <Text variant="caption" weight="semibold" style={{color: getProgressColor()}}>
-              {percentage.toFixed(0)}%
-            </Text>
-          </View>
-          <View style={{height: 6, backgroundColor: C.border, borderRadius: 3, overflow: 'hidden'}}>
-            <View style={{height: 6, width: `${pct}%`, backgroundColor: getProgressColor(), borderRadius: 3}} />
-          </View>
-          
-          {isOverBudget ? (
-            <Text variant="caption" color="danger" weight="medium">
-              Over budget by {formatMoney(Math.abs(convertedRemaining))}
-            </Text>
-          ) : (
-            <Text variant="caption" color="secondary">
-              {formatMoney(convertedRemaining)} remaining
-            </Text>
-          )}
+      <View style={{gap: 6}}>
+        <View style={{flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center'}}>
+          <Text variant="caption" color="secondary">
+            {formatMoney(convertedSpent)} spent
+          </Text>
+          <Text variant="caption" weight="semibold" style={{color: getProgressColor()}}>
+            {percentage.toFixed(0)}%
+          </Text>
         </View>
-      )}
+        <View style={{height: 6, backgroundColor: C.border, borderRadius: 3, overflow: 'hidden'}}>
+          <View style={{height: 6, width: `${pct}%`, backgroundColor: getProgressColor(), borderRadius: 3}} />
+        </View>
+        
+        {isOverBudget ? (
+          <Text variant="caption" color="danger" weight="medium">
+            Over budget by {formatMoney(Math.abs(convertedRemaining))}
+          </Text>
+        ) : (
+          <Text variant="caption" color="secondary">
+            {formatMoney(convertedRemaining)} remaining
+          </Text>
+        )}
+      </View>
 
       {/* Divider */}
       <View style={{height: 1, backgroundColor: C.border}} />
@@ -175,8 +171,9 @@ export default function BudgetGoalsScreen() {
     setDeleteGoal(goal);
   };
 
-  const activeGoals = goals?.filter((g) => g.is_active) ?? [];
-  const totalBudgeted = activeGoals.reduce((sum, g) => {
+  const activeStatuses = goals?.filter((status) => status.goal.is_active) ?? [];
+  const totalBudgeted = activeStatuses.reduce((sum, status) => {
+    const g = status.goal;
     return sum + convert(Number(g.amount), g.currency || 'USD', preferredCurrency);
   }, 0);
 
@@ -277,7 +274,7 @@ export default function BudgetGoalsScreen() {
                 {formatMoney(totalBudgeted)}
               </Text>
               <Text variant="caption" color="muted">
-                Based on your {activeGoals.length} active budget goals
+                Based on your {activeStatuses.length} active budget goals
               </Text>
             </View>
           )}
@@ -290,8 +287,8 @@ export default function BudgetGoalsScreen() {
               <Button label="Create Your First Goal" variant="primary" size="md" onPress={() => router.push('/create-budget-goal')} />
             </View>
           ) : (
-            goals.map((goal) => (
-              <GoalCard key={goal.id} goal={goal} onEdit={handleEdit} onDelete={handleDelete} />
+            goals.map((status) => (
+              <GoalCard key={status.goal.id} status={status} onEdit={handleEdit} onDelete={handleDelete} />
             ))
           )}
         </ScrollView>
@@ -384,22 +381,24 @@ export default function BudgetGoalsScreen() {
         confirmLabel="Delete"
         cancelLabel="Cancel"
         isDestructive
+        loading={deleteMutation.isPending}
         onConfirm={() => {
           if (deleteGoal) {
             const {id, name} = deleteGoal;
-            setDeleteGoal(null);
             deleteMutation.mutate(id, {
               onSuccess: () => {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 showToast({message: `Deleted budget goal "${name}"`, type: 'success'});
+                setDeleteGoal(null);
               },
               onError: (err) => {
                 showToast({message: err.message, type: 'error'});
+                setDeleteGoal(null);
               },
             });
           }
         }}
-        onCancel={() => setDeleteGoal(null)}
+        onCancel={() => !deleteMutation.isPending && setDeleteGoal(null)}
       />
     </View>
   );

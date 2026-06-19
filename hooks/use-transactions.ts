@@ -50,7 +50,7 @@ export function useCreateTransaction() {
     mutationFn: async (payload: TransactionCreate) => {
       const {data} = await transactionsApi.create(payload);
       if (data.hasError) throw new Error(data.message);
-      return data.data;
+      return data;
     },
     onSuccess: () => qc.invalidateQueries({queryKey: TXN_KEYS.all}),
     onError: (err) => { throw new Error(getApiError(err)); },

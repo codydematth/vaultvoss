@@ -3,6 +3,10 @@ export interface ApiResponse<T = unknown> {
   hasError: boolean;
   message: string;
   data: T;
+  meta?: {
+    budget_warning?: string | null;
+    [key: string]: any;
+  } | null;
 }
 
 // ─── User ─────────────────────────────────────────────────────────────────────
@@ -184,7 +188,8 @@ export interface BudgetGoalStatus {
   remaining: number;
   percentage_used: number;
   is_over_budget: boolean;
-  currency: string;
+  currency?: string;
+  period_label?: string | null;
 }
 
 export interface BudgetGoalCreate {

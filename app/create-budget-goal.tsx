@@ -39,7 +39,7 @@ export default function CreateBudgetGoalScreen() {
   const updateMutation = useUpdateBudgetGoal();
   const {data: goals} = useBudgetGoals();
 
-  const editGoal = goals?.find((g) => g.id === id);
+  const editGoal = goals?.find((g) => g.goal.id === id)?.goal;
 
   const [type, setType] = useState<TransactionType>('expense');
   const [name, setName] = useState('');

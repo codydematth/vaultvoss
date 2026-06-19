@@ -419,22 +419,24 @@ export default function RecurringScreen() {
         message={triggerItem ? `Do you want to manually create a transaction from "${triggerItem.name}" right now?` : ''}
         confirmLabel="Trigger"
         cancelLabel="Cancel"
+        loading={triggerMutation.isPending}
         onConfirm={() => {
           if (triggerItem) {
             const {id, name} = triggerItem;
-            setTriggerItem(null);
             triggerMutation.mutate(id, {
               onSuccess: () => {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 showToast({message: `Triggered transaction for "${name}"`, type: 'success'});
+                setTriggerItem(null);
               },
               onError: (err) => {
                 showToast({message: err.message, type: 'error'});
+                setTriggerItem(null);
               },
             });
           }
         }}
-        onCancel={() => setTriggerItem(null)}
+        onCancel={() => !triggerMutation.isPending && setTriggerItem(null)}
       />
 
       <ConfirmDialog
@@ -444,22 +446,24 @@ export default function RecurringScreen() {
         confirmLabel="Delete"
         cancelLabel="Cancel"
         isDestructive
+        loading={deleteMutation.isPending}
         onConfirm={() => {
           if (deleteItem) {
             const {id, name} = deleteItem;
-            setDeleteItem(null);
             deleteMutation.mutate(id, {
               onSuccess: () => {
                 Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
                 showToast({message: `Deleted recurring "${name}"`, type: 'success'});
+                setDeleteItem(null);
               },
               onError: (err) => {
                 showToast({message: err.message, type: 'error'});
+                setDeleteItem(null);
               },
             });
           }
         }}
-        onCancel={() => setDeleteItem(null)}
+        onCancel={() => !deleteMutation.isPending && setDeleteItem(null)}
       />
     </View>
   );

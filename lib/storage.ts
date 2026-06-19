@@ -117,6 +117,25 @@ export const storage = {
     return raw === 'true';
   },
 
+  setNotifMonthlyBudgetEnabled: (enabled: boolean) =>
+    SecureStore.setItemAsync('vv_notif_monthly_budget_enabled', enabled ? 'true' : 'false'),
+  getNotifMonthlyBudgetEnabled: async () => {
+    const raw = await SecureStore.getItemAsync('vv_notif_monthly_budget_enabled');
+    return raw === 'true';
+  },
+
+  setHideBalance: (hidden: boolean) =>
+    SecureStore.setItemAsync('vv_hide_balance', hidden ? 'true' : 'false'),
+  getHideBalance: async () => {
+    const raw = await SecureStore.getItemAsync('vv_hide_balance');
+    return raw === 'true';
+  },
+
+  setLastWeeklyEmailSent: (dateStr: string) =>
+    SecureStore.setItemAsync('vv_last_weekly_email_sent', dateStr),
+  getLastWeeklyEmailSent: () =>
+    SecureStore.getItemAsync('vv_last_weekly_email_sent'),
+
   setWarnedBudgets: (listJson: string) =>
     SecureStore.setItemAsync('vv_warned_budgets', listJson),
   getWarnedBudgets: () =>

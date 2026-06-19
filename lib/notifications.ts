@@ -7,6 +7,7 @@ import type {RecurringTransaction, BudgetGoalStatus} from '@/lib/api/types';
 const IDS = {
   DAILY_REMINDER: 'vv_daily_reminder',
   WEEKLY_SUMMARY: 'vv_weekly_summary',
+  MONTHLY_BUDGET_REMINDER: 'vv_monthly_budget_reminder',
   recurringPrefix: 'vv_recurring_',
   budgetPrefix: 'vv_budget_',
 } as const;
@@ -29,7 +30,7 @@ async function ensureAndroidChannel() {
       name: 'VaultVoss',
       importance: Notifications.AndroidImportance.HIGH,
       vibrationPattern: [0, 250, 250, 250],
-      lightColor: '#1E88E5',
+      lightColor: '#0088FF',
     });
   }
 }
@@ -55,6 +56,7 @@ export async function scheduleDailyReminder(hour: number, minute: number) {
       title: '💰 Log your expenses',
       body: "Don't forget to track your spending today!",
       sound: true,
+      interruptionLevel: 'timeSensitive',
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DAILY,
@@ -92,6 +94,31 @@ export async function scheduleWeeklySummary() {
 
 export async function cancelWeeklySummary() {
   await Notifications.cancelScheduledNotificationAsync(IDS.WEEKLY_SUMMARY).catch(() => {});
+}
+
+// ── Monthly Budget Goals Reminder ───────────────────────────────────────────
+export async function scheduleMonthlyBudgetReminder() {
+  await cancelMonthlyBudgetReminder();
+
+  await Notifications.scheduleNotificationAsync({
+    identifier: IDS.MONTHLY_BUDGET_REMINDER,
+    content: {
+      title: '📅 New Month, New Budgets!',
+      body: 'Today is the first day of the month. Review your budget goals and plan your spending!',
+      sound: true,
+    },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.MONTHLY,
+      day: 1,
+      hour: 9,
+      minute: 0,
+      channelId: 'vaultvoss-general',
+    },
+  });
+}
+
+export async function cancelMonthlyBudgetReminder() {
+  await Notifications.cancelScheduledNotificationAsync(IDS.MONTHLY_BUDGET_REMINDER).catch(() => {});
 }
 
 // ── Recurring Bill Reminders ────────────────────────────────────────────────
@@ -162,6 +189,7 @@ export async function scheduleRecurringBillReminder(item: RecurringTransaction) 
       title: `🔔 ${item.transaction_name} due`,
       body: `Your ${item.frequency} ${label} of ${item.amount} ${item.currency} is due today.`,
       sound: true,
+      interruptionLevel: 'timeSensitive',
     },
     trigger: {
       type: Notifications.SchedulableTriggerInputTypes.DATE,
@@ -239,6 +267,7 @@ export async function checkBudgetWarnings(statusList: BudgetGoalStatus[]) {
             title: '⚠️ Budget Warning',
             body: `"${goal.name}" is at ${Math.round(status.percentage_used)}% of its limit.`,
             sound: true,
+            interruptionLevel: 'timeSensitive',
           },
           trigger: null, // Immediate
         });
@@ -253,6 +282,7 @@ export async function checkBudgetWarnings(statusList: BudgetGoalStatus[]) {
             title: '🚨 Over Budget!',
             body: `"${goal.name}" has exceeded its limit at ${Math.round(status.percentage_used)}%.`,
             sound: true,
+            interruptionLevel: 'timeSensitive',
           },
           trigger: null, // Immediate
         });

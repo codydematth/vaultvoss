@@ -14,6 +14,7 @@ interface ConfirmDialogProps {
   isDestructive?: boolean;
   onConfirm: () => void;
   onCancel: () => void;
+  loading?: boolean;
 }
 
 export function ConfirmDialog({
@@ -25,6 +26,7 @@ export function ConfirmDialog({
   isDestructive = false,
   onConfirm,
   onCancel,
+  loading = false,
 }: ConfirmDialogProps) {
   if (!visible) return null;
 
@@ -55,6 +57,7 @@ export function ConfirmDialog({
                 variant="secondary"
                 size="md"
                 onPress={onCancel}
+                disabled={loading}
               />
             </View>
             <View style={{ flex: 1 }}>
@@ -63,6 +66,7 @@ export function ConfirmDialog({
                 variant={isDestructive ? 'destructive' : 'primary'}
                 size="md"
                 onPress={onConfirm}
+                loading={loading}
               />
             </View>
           </View>

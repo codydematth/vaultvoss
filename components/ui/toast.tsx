@@ -10,7 +10,7 @@ const {width} = Dimensions.get('window');
 
 interface ToastOptions {
   message: string;
-  type?: 'success' | 'error' | 'info';
+  type?: 'success' | 'error' | 'info' | 'warning';
   duration?: number;
 }
 
@@ -24,7 +24,7 @@ export function ToastProvider({children}: {children: React.ReactNode}) {
   const insets = useSafeAreaInsets();
   const [visible, setVisible] = useState(false);
   const [message, setMessage] = useState('');
-  const [type, setType] = useState<'success' | 'error' | 'info'>('success');
+  const [type, setType] = useState<'success' | 'error' | 'info' | 'warning'>('success');
   
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-100)).current;
@@ -79,6 +79,8 @@ export function ToastProvider({children}: {children: React.ReactNode}) {
         return {name: 'checkmark.circle.fill' as const, color: C.income};
       case 'error':
         return {name: 'xmark.circle.fill' as const, color: C.expense};
+      case 'warning':
+        return {name: 'exclamationmark.triangle.fill' as const, color: C.warning};
       case 'info':
       default:
         return {name: 'info.circle' as const, color: C.textSecondary};

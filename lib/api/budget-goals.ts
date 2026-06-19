@@ -9,7 +9,7 @@ import type {
 
 export const budgetGoalsApi = {
   list: () =>
-    apiClient.get<ApiResponse<BudgetGoal[]>>('/budget-goals/'),
+    apiClient.get<ApiResponse<BudgetGoalStatus[]>>('/budget-goals/'),
 
   create: (p: BudgetGoalCreate) =>
     apiClient.post<ApiResponse<BudgetGoal>>('/budget-goals/', p),

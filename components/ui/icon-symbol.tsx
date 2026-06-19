@@ -58,6 +58,28 @@ function ModernHomeIcon({
   );
 }
 
+function MoreIcon({
+  color,
+  size,
+  style,
+}: {
+  color: string;
+  size: number;
+  style?: StyleProp<ViewStyle>;
+}) {
+  return (
+    <Svg width={size} height={size} viewBox="0 0 24 24" fill="none" style={style}>
+      <Path
+        d="M12 9.32c1.19 0 2.16-.97 2.16-2.16C14.16 5.97 13.19 5 12 5c-1.19 0-2.16.97-2.16 2.16 0 1.19.97 2.16 2.16 2.16ZM6.79 19c1.19 0 2.16-.97 2.16-2.16 0-1.19-.97-2.16-2.16-2.16-1.19 0-2.16.97-2.16 2.16 0 1.19.96 2.16 2.16 2.16ZM17.21 19c1.19 0 2.16-.97 2.16-2.16 0-1.19-.97-2.16-2.16-2.16-1.19 0-2.16.97-2.16 2.16 0 1.19.97 2.16 2.16 2.16Z"
+        stroke={color}
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </Svg>
+  );
+}
+
 type IconConfig = 
   | { family: 'Feather'; name: keyof typeof Feather.glyphMap }
   | { family: 'Ionicons'; name: keyof typeof Ionicons.glyphMap };
@@ -79,6 +101,7 @@ const MAPPING: Record<string, IconConfig> = {
   'person.fill': { family: 'Feather', name: 'user' },
   'waveform.path.ecg': { family: 'Feather', name: 'activity' },
   'info.circle': { family: 'Feather', name: 'info' },
+  'exclamationmark.triangle.fill': { family: 'Feather', name: 'alert-triangle' },
   'eye': { family: 'Feather', name: 'eye' },
   'eye.slash': { family: 'Feather', name: 'eye-off' },
   'calendar': { family: 'Feather', name: 'calendar' },
@@ -95,6 +118,7 @@ const MAPPING: Record<string, IconConfig> = {
   'chevron.left.forwardslash.chevron.right': { family: 'Feather', name: 'code' },
   'list.bullet': { family: 'Feather', name: 'list' },
   'gearshape.fill': { family: 'Feather', name: 'settings' },
+  'grid': { family: 'Feather', name: 'grid' },
   'envelope': { family: 'Feather', name: 'mail' },
   'lock': { family: 'Feather', name: 'lock' },
   'person': { family: 'Feather', name: 'user' },
@@ -137,6 +161,9 @@ export function IconSymbol({
   }
   if (name === 'house.fill') {
     return <ModernHomeIcon color={color} size={size} focused={true} style={style} />;
+  }
+  if (name === 'grid') {
+    return <MoreIcon color={color} size={size} style={style} />;
   }
 
   const config = MAPPING[name];

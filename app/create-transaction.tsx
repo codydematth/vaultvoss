@@ -64,9 +64,14 @@ export default function CreateTransactionScreen() {
     };
 
     createMutation.mutate(payload, {
-      onSuccess: () => {
+      onSuccess: (res) => {
         Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-        showToast({message: `Added transaction "${payload.transaction_name}"`, type: 'success'});
+        const warning = res.meta?.budget_warning;
+        if (warning) {
+          showToast({message: warning, type: 'warning', duration: 6000});
+        } else {
+          showToast({message: `Added transaction "${payload.transaction_name}"`, type: 'success'});
+        }
         router.back();
       },
       onError: (err) => setError(err.message),

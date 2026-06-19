@@ -28,6 +28,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
 import { checkBudgetWarnings } from "@/lib/notifications";
 import { useAllBudgetGoalsStatus } from "@/hooks/use-budget-goals";
+import { storage } from "@/lib/storage";
 
 const { width } = Dimensions.get("window");
 
@@ -90,6 +91,22 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState<"all" | "expense" | "income">(
     "all",
   );
+  const [hideBalance, setHideBalance] = useState(false);
+
+  // Load saved preference on mount
+  useEffect(() => {
+    (async () => {
+      const saved = await storage.getHideBalance();
+      setHideBalance(saved);
+    })();
+  }, []);
+
+  const toggleHideBalance = async () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    const newVal = !hideBalance;
+    setHideBalance(newVal);
+    await storage.setHideBalance(newVal);
+  };
 
   const displayMoney = (v: number | undefined) =>
     v === undefined || v === null ? "—" : formatMoney(v);
@@ -131,7 +148,7 @@ export default function HomeScreen() {
 
   // ── Module quick-access cards ──
   const nwCount = netWorth?.items?.length ?? 0;
-  const bgCount = (budgetGoals ?? []).filter((g: any) => g.is_active).length;
+  const bgCount = (budgetGoals ?? []).filter((g: any) => g.goal?.is_active ?? g.is_active).length;
   const rcCount = (recurringItems ?? []).filter((r: any) => r.is_active).length;
 
   const moduleCards: {
@@ -280,25 +297,39 @@ export default function HomeScreen() {
 
         {/* ── Balance ── */}
         <View style={{ paddingHorizontal: 20, marginBottom: 20, gap: 2 }}>
-          <Text variant="caption" color="secondary" style={{ fontSize: 15 }}>
-            Balance
-          </Text>
-          {summaryLoading ? (
-            <ActivityIndicator
-              color={C.accent}
-              style={{ alignSelf: "flex-start", marginTop: 4 }}
-            />
-          ) : (
-            <Text
-              variant="heading"
-              style={{
-                color: C.textPrimary,
-                fontFamily: Fonts.sansBold,
-              }}
-            >
-              {displayMoney(net)}
-            </Text>
-          )}
+          <Pressable
+            onPress={toggleHideBalance}
+            style={({ pressed }) => ({
+              opacity: pressed ? 0.85 : 1,
+              gap: 2,
+            })}
+          >
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <Text variant="caption" color="secondary" style={{ fontSize: 15 }}>
+                Balance
+              </Text>
+              <IconSymbol name={hideBalance ? "eye.slash" : "eye"} size={16} color={C.textSecondary} />
+            </View>
+            {summaryLoading ? (
+              <ActivityIndicator
+                color={C.accent}
+                style={{ alignSelf: "flex-start", marginTop: 4 }}
+              />
+            ) : (
+              <Text
+                variant="heading"
+                style={[
+                  {
+                    color: C.textPrimary,
+                    fontFamily: Fonts.sansBold,
+                  },
+                  hideBalance && { fontSize: 18, lineHeight: 34 }
+                ]}
+              >
+                {hideBalance ? "******" : displayMoney(net)}
+              </Text>
+            )}
+          </Pressable>
         </View>
 
         {/* ── Savings card (Well Done!) ── */}
@@ -352,7 +383,7 @@ export default function HomeScreen() {
             </View>
             <DonutProgress
               percentage={displaySavingsRate}
-              amount={`${getCurrencySymbol()}${Math.round(net ?? 0).toLocaleString()}`}
+              amount={hideBalance ? "****" : `${getCurrencySymbol()}${Math.round(net ?? 0).toLocaleString()}`}
               label="Saved"
             />
           </View>

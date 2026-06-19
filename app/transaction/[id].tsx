@@ -286,20 +286,22 @@ export default function EditTransactionScreen() {
         confirmLabel="Delete"
         cancelLabel="Cancel"
         isDestructive
+        loading={deleteMutation.isPending}
         onConfirm={() => {
-          setShowDeleteConfirm(false);
           deleteMutation.mutate(id, {
             onSuccess: () => {
               Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               showToast({message: `Deleted transaction "${name}"`, type: 'success'});
+              setShowDeleteConfirm(false);
               router.back();
             },
             onError: (err) => {
+              setShowDeleteConfirm(false);
               showToast({message: err.message, type: 'error'});
             }
           });
         }}
-        onCancel={() => setShowDeleteConfirm(false)}
+        onCancel={() => !deleteMutation.isPending && setShowDeleteConfirm(false)}
       />
     </View>
   );
