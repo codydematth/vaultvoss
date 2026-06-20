@@ -6,10 +6,6 @@
     "orientation": "portrait",
     "icon": "./assets/images/Light.png",
     "scheme": "vaultvoss",
-    "notification": {
-      "icon": "./assets/images/vaultvoss.png",
-      "color": "#0088FF"
-    },
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
     "runtimeVersion": {
@@ -71,13 +67,7 @@
           "iosUrlScheme": "com.googleusercontent.apps.447105374706-nb40amb89c2ht6tjn9jsv9uqfei4l8nf"
         }
       ],
-      [
-        "expo-notifications",
-        {
-          "icon": "./assets/images/vaultvoss.png",
-          "color": "#ffffff"
-        }
-      ]
+      "expo-notifications"
     ],
     "experiments": {
       "typedRoutes": true,

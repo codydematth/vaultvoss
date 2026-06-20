@@ -11,6 +11,7 @@ import type {
   RegisterPayload,
   ResetPasswordPayload,
   UpdateUserPayload,
+  UpdateUserNotificationSettingsPayload,
   User,
   VerifyOtpPayload,
 } from './types';
@@ -55,6 +56,9 @@ export const usersApi = {
     apiClient.patch<ApiResponse<User>>('/users/me', p, {
       headers: p instanceof FormData ? {'Content-Type': 'multipart/form-data'} : undefined,
     }),
+
+  updateNotifications: (p: UpdateUserNotificationSettingsPayload) =>
+    apiClient.patch<ApiResponse<User>>('/users/me/notifications', p),
 
   deleteById: (id: string) =>
     apiClient.delete<ApiResponse<null>>(`/users/${id}`),

@@ -4,16 +4,9 @@ import { useToast } from "@/components/ui/toast";
 import { C } from "@/constants/colors";
 import { Fonts } from "@/constants/theme";
 import { useRecurringTransactions } from "@/hooks/use-recurring";
-import {
-  cancelDailyReminder,
-  cancelWeeklySummary,
-  cancelMonthlyBudgetReminder,
-  requestPermissions,
-  scheduleDailyReminder,
-  scheduleWeeklySummary,
-  scheduleMonthlyBudgetReminder,
-  syncAllRecurringReminders,
-} from "@/lib/notifications";
+import { requestPermissions, registerPushNotifications } from "@/lib/notifications";
+import { useAuthContext } from "@/lib/auth/auth-context";
+import { usersApi } from "@/lib/api/auth";
 import { storage } from "@/lib/storage";
 import * as Haptics from "expo-haptics";
 import * as Battery from 'expo-battery';
@@ -37,7 +30,7 @@ export default function NotificationsScreen() {
   const insets = useSafeAreaInsets();
   const router = useRouter();
   const { showToast } = useToast();
-  const { data: recurringItems } = useRecurringTransactions();
+  const { user, refreshUser } = useAuthContext();
 
   const [dailyEnabled, setDailyEnabled] = useState(false);
   const [dailyHour, setDailyHour] = useState(20);
@@ -87,27 +80,38 @@ export default function NotificationsScreen() {
     };
   }, [checkBatterySaverStatus]);
 
-  // Load saved preferences
+  // Load saved preferences from backend user context
   useEffect(() => {
-    (async () => {
-      const [daily, time, bills, budget, weekly, monthlyBudget] = await Promise.all([
-        storage.getNotifDailyEnabled(),
-        storage.getNotifDailyTime(),
-        storage.getNotifBillsEnabled(),
-        storage.getNotifBudgetEnabled(),
-        storage.getNotifWeeklyEnabled(),
-        storage.getNotifMonthlyBudgetEnabled(),
-      ]);
-      setDailyEnabled(daily);
-      setDailyHour(time.hour);
-      setDailyMinute(time.minute);
-      setBillsEnabled(bills);
-      setBudgetEnabled(budget);
-      setWeeklyEnabled(weekly);
-      setMonthlyBudgetEnabled(monthlyBudget || false);
+    if (user) {
+      setDailyEnabled(user.notif_daily_enabled || false);
+      setDailyHour(user.notif_daily_hour ?? 20);
+      setDailyMinute(user.notif_daily_minute ?? 0);
+      setBillsEnabled(user.notif_bills_enabled || false);
+      setBudgetEnabled(user.notif_budget_enabled || false);
+      setWeeklyEnabled(user.notif_weekly_enabled || false);
+      setMonthlyBudgetEnabled(user.notif_monthly_budget_enabled || false);
       setLoaded(true);
-    })();
-  }, []);
+    } else {
+      (async () => {
+        const [daily, time, bills, budget, weekly, monthlyBudget] = await Promise.all([
+          storage.getNotifDailyEnabled(),
+          storage.getNotifDailyTime(),
+          storage.getNotifBillsEnabled(),
+          storage.getNotifBudgetEnabled(),
+          storage.getNotifWeeklyEnabled(),
+          storage.getNotifMonthlyBudgetEnabled(),
+        ]);
+        setDailyEnabled(daily);
+        setDailyHour(time.hour);
+        setDailyMinute(time.minute);
+        setBillsEnabled(bills);
+        setBudgetEnabled(budget);
+        setWeeklyEnabled(weekly);
+        setMonthlyBudgetEnabled(monthlyBudget || false);
+        setLoaded(true);
+      })();
+    }
+  }, [user]);
 
   const ensurePermission = useCallback(async (): Promise<boolean> => {
     const granted = await requestPermissions();
@@ -127,14 +131,18 @@ export default function NotificationsScreen() {
     if (value) {
       const ok = await ensurePermission();
       if (!ok) return;
-      await scheduleDailyReminder(dailyHour, dailyMinute);
+      await registerPushNotifications();
+    }
+    
+    try {
+      await usersApi.updateNotifications({ notif_daily_enabled: value });
+      await refreshUser();
       showToast({
-        message: `Daily reminder set for ${formatTime(dailyHour, dailyMinute)}`,
+        message: value ? `Daily reminder set for ${formatTime(dailyHour, dailyMinute)}` : "Daily reminder disabled",
         type: "success",
       });
-    } else {
-      await cancelDailyReminder();
-      showToast({ message: "Daily reminder disabled", type: "success" });
+    } catch (err) {
+      showToast({ message: "Failed to update daily reminder setting", type: "error" });
     }
     setDailyEnabled(value);
     await storage.setNotifDailyEnabled(value);
@@ -144,8 +152,11 @@ export default function NotificationsScreen() {
     Haptics.selectionAsync();
     setDailyHour(hour);
     await storage.setNotifDailyTime(hour, dailyMinute);
-    if (dailyEnabled) {
-      await scheduleDailyReminder(hour, dailyMinute);
+    try {
+      await usersApi.updateNotifications({ notif_daily_hour: hour, notif_daily_minute: dailyMinute });
+      await refreshUser();
+    } catch (err) {
+      console.warn("Failed to update daily time settings:", err);
     }
   };
 
@@ -155,25 +166,15 @@ export default function NotificationsScreen() {
     if (value) {
       const ok = await ensurePermission();
       if (!ok) return;
-      if (recurringItems) {
-        await syncAllRecurringReminders(recurringItems);
-      }
-      showToast({ message: "Bill reminders enabled", type: "success" });
-    } else {
-      // Cancel all recurring reminders
-      if (recurringItems) {
-        const Notifications = await import("expo-notifications");
-        const scheduled =
-          await Notifications.getAllScheduledNotificationsAsync();
-        for (const n of scheduled) {
-          if (n.identifier.startsWith("vv_recurring_")) {
-            await Notifications.cancelScheduledNotificationAsync(
-              n.identifier,
-            ).catch(() => {});
-          }
-        }
-      }
-      showToast({ message: "Bill reminders disabled", type: "success" });
+      await registerPushNotifications();
+    }
+
+    try {
+      await usersApi.updateNotifications({ notif_bills_enabled: value });
+      await refreshUser();
+      showToast({ message: value ? "Bill reminders enabled" : "Bill reminders disabled", type: "success" });
+    } catch (err) {
+      showToast({ message: "Failed to update bill reminders setting", type: "error" });
     }
     setBillsEnabled(value);
     await storage.setNotifBillsEnabled(value);
@@ -185,9 +186,15 @@ export default function NotificationsScreen() {
     if (value) {
       const ok = await ensurePermission();
       if (!ok) return;
-      showToast({ message: "Budget warnings enabled", type: "success" });
-    } else {
-      showToast({ message: "Budget warnings disabled", type: "success" });
+      await registerPushNotifications();
+    }
+
+    try {
+      await usersApi.updateNotifications({ notif_budget_enabled: value });
+      await refreshUser();
+      showToast({ message: value ? "Budget warnings enabled" : "Budget warnings disabled", type: "success" });
+    } catch (err) {
+      showToast({ message: "Failed to update budget warnings setting", type: "error" });
     }
     setBudgetEnabled(value);
     await storage.setNotifBudgetEnabled(value);
@@ -199,14 +206,18 @@ export default function NotificationsScreen() {
     if (value) {
       const ok = await ensurePermission();
       if (!ok) return;
-      await scheduleWeeklySummary();
+      await registerPushNotifications();
+    }
+
+    try {
+      await usersApi.updateNotifications({ notif_weekly_enabled: value });
+      await refreshUser();
       showToast({
-        message: "Weekly summary scheduled for Sundays at 6 PM",
+        message: value ? "Weekly summary scheduled for Sundays at 6 PM" : "Weekly summary disabled",
         type: "success",
       });
-    } else {
-      await cancelWeeklySummary();
-      showToast({ message: "Weekly summary disabled", type: "success" });
+    } catch (err) {
+      showToast({ message: "Failed to update weekly summary setting", type: "error" });
     }
     setWeeklyEnabled(value);
     await storage.setNotifWeeklyEnabled(value);
@@ -218,14 +229,18 @@ export default function NotificationsScreen() {
     if (value) {
       const ok = await ensurePermission();
       if (!ok) return;
-      await scheduleMonthlyBudgetReminder();
+      await registerPushNotifications();
+    }
+
+    try {
+      await usersApi.updateNotifications({ notif_monthly_budget_enabled: value });
+      await refreshUser();
       showToast({
-        message: "Monthly budget reminder scheduled for the 1st at 9 AM",
+        message: value ? "Monthly budget reminder scheduled for the 1st at 9 AM" : "Monthly budget reminder disabled",
         type: "success",
       });
-    } else {
-      await cancelMonthlyBudgetReminder();
-      showToast({ message: "Monthly budget reminder disabled", type: "success" });
+    } catch (err) {
+      showToast({ message: "Failed to update monthly budget setting", type: "error" });
     }
     setMonthlyBudgetEnabled(value);
     await storage.setNotifMonthlyBudgetEnabled(value);

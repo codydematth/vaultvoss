@@ -18,6 +18,17 @@ export interface User {
   is_active: boolean;
   created_at: string;
   updated_at: string;
+
+  // Notification preferences
+  expo_push_token: string | null;
+  timezone: string | null;
+  notif_daily_enabled: boolean;
+  notif_daily_hour: number;
+  notif_daily_minute: number;
+  notif_bills_enabled: boolean;
+  notif_budget_enabled: boolean;
+  notif_weekly_enabled: boolean;
+  notif_monthly_budget_enabled: boolean;
 }
 
 export interface AuthTokens {
@@ -45,6 +56,18 @@ export interface UpdateUserPayload {
   password?: string;
   is_active?: boolean;
   profile_image_url?: string;
+}
+
+export interface UpdateUserNotificationSettingsPayload {
+  expo_push_token?: string | null;
+  timezone?: string | null;
+  notif_daily_enabled?: boolean;
+  notif_daily_hour?: number;
+  notif_daily_minute?: number;
+  notif_bills_enabled?: boolean;
+  notif_budget_enabled?: boolean;
+  notif_weekly_enabled?: boolean;
+  notif_monthly_budget_enabled?: boolean;
 }
 
 // ─── Enums ────────────────────────────────────────────────────────────────────

@@ -72,45 +72,46 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
   useEffect(() => {
     (async () => {
       try {
-        const [token, cachedUser] = await Promise.all([
-          storage.getAccessToken(),
-          storage.getUser(),
-        ]);
+        const token = await storage.getAccessToken();
 
-        // No token = unauthenticated
-        if (!token) {
-          setState({
-            user: null,
-            isLoading: false,
-          });
-          return;
+        if (token) {
+          // Since the policy is "logout on close", any fresh launch should clear the session.
+          // Trigger the cleanup in the background so it doesn't block the UI.
+          (async () => {
+            try {
+              await authApi.logout();
+            } catch (err) {
+              console.log('Background logout API call failed:', err);
+            }
+            try {
+              await GoogleSignin.signOut();
+            } catch (err) {
+              console.log('Failed to sign out of Google on launch:', err);
+            }
+            await Promise.all([
+              storage.clearTokens(),
+              storage.clearUser(),
+              storage.setCurrencyPreference('USD'),
+            ]).catch((err) => {
+              console.log('Failed to clear storage on launch:', err);
+            });
+          })();
         }
 
-        // Restore cached user immediately to mount Stack and redirect instantly
-        if (cachedUser) {
-          setState({
-            user: cachedUser as User,
-            isLoading: false,
-          });
-          // Refresh latest user details in background
-          refreshUser().catch((err) => console.log('Background refresh failed:', err));
-        } else {
-          // If we have a token but no cached user, we must fetch it before showing the app
-          await refreshUser();
-          setState((prev) => ({
-            ...prev,
-            isLoading: false,
-          }));
-        }
+        // Set to unauthenticated immediately on launch to load the login/onboarding screen straight away
+        setState({
+          user: null,
+          isLoading: false,
+        });
       } catch (err) {
         console.log('Failed to restore session:', err);
-        setState((prev) => ({
-          ...prev,
+        setState({
+          user: null,
           isLoading: false,
-        }));
+        });
       }
     })();
-  }, [refreshUser]);
+  }, []);
 
   // ─── Save session ─────────────────────────────────────────────────────────
 
@@ -127,6 +128,12 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
   // ─── Logout ───────────────────────────────────────────────────────────────
 
   const clearSession = useCallback(async () => {
+    // Immediately update UI state so user is redirected to login screen instantly
+    setState({
+      user: null,
+      isLoading: false,
+    });
+
     try {
       await authApi.logout();
     } catch {}
@@ -142,11 +149,6 @@ export function AuthProvider({children}: {children: React.ReactNode}) {
       storage.clearUser(),
       storage.setCurrencyPreference('USD'),
     ]);
-
-    setState({
-      user: null,
-      isLoading: false,
-    });
   }, []);
 
   return (
