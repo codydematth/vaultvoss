@@ -2,7 +2,6 @@ import {recurringApi} from '@/lib/api/recurring';
 import {getApiError} from '@/lib/api/client';
 import type {RecurringTransactionCreate, RecurringTransactionUpdate} from '@/lib/api/types';
 import {useMutation, useQuery, useQueryClient} from '@tanstack/react-query';
-import {syncAllRecurringReminders} from '@/lib/notifications';
 
 export const RECURRING_KEYS = {
   all: ['recurring'] as const,
@@ -34,14 +33,7 @@ export function useRecurringTransaction(id: string) {
 }
 
 async function syncReminders() {
-  try {
-    const {data} = await recurringApi.list();
-    if (data.data) {
-      await syncAllRecurringReminders(data.data);
-    }
-  } catch (err) {
-    console.error('Failed to sync recurring reminders after mutation:', err);
-  }
+  // Sync recurring reminders on the backend
 }
 
 export function useCreateRecurring() {

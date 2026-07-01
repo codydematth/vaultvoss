@@ -21,11 +21,10 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import type {BudgetPeriod, TransactionType, ExpenseCategory, IncomeCategory} from '@/lib/api/types';
 import {useToast} from '@/components/ui/toast';
 import {formatAmountWithCommas, useCurrency} from '@/lib/currency-context';
+import {useEnums} from '@/hooks/use-enums';
 
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'NGN', 'CAD', 'AUD'];
 const PERIODS: BudgetPeriod[] = ['weekly', 'monthly', 'yearly'];
-const EXPENSE_CATEGORIES: ExpenseCategory[] = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Bills', 'Health', 'Other'];
-const INCOME_CATEGORIES: IncomeCategory[] = ['Salary', 'Freelance', 'Gift', 'Investment', 'Other'];
 type GoalPeriod = BudgetPeriod;
 
 export default function CreateBudgetGoalScreen() {
@@ -34,6 +33,7 @@ export default function CreateBudgetGoalScreen() {
   const {showToast} = useToast();
   const {currency: activeCurrency} = useCurrency();
   const {id} = useLocalSearchParams<{id?: string}>();
+  const {expense_categories, income_categories} = useEnums();
   
   const createMutation = useCreateBudgetGoal();
   const updateMutation = useUpdateBudgetGoal();
@@ -173,7 +173,7 @@ export default function CreateBudgetGoalScreen() {
             <Text variant='label' color='secondary' style={{marginBottom: 8}}>Category</Text>
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               <View style={{flexDirection: 'row', gap: 6}}>
-                {(type === 'expense' ? EXPENSE_CATEGORIES : INCOME_CATEGORIES).map((cat) => {
+                {(type === 'expense' ? expense_categories : income_categories).map((cat) => {
                   const isSelected = type === 'expense' ? expenseCategory === cat : incomeCategory === cat;
                   return (
                     <Pressable

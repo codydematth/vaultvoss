@@ -5,55 +5,49 @@ import type { BottomTabBarProps } from "@react-navigation/bottom-tabs";
 import { BlurView } from "expo-blur";
 import * as Haptics from "expo-haptics";
 import { Tabs, useRouter } from "expo-router";
-import { useEffect } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-// ─── Animated Tab Icon ────────────────────────────────────────────────────────
-function AnimatedIconWrapper({
-  children,
-  focused,
-}: {
-  children: React.ReactNode;
-  focused: boolean;
-}) {
-  const scale = useSharedValue(1);
-  const translateY = useSharedValue(0);
-  const rotation = useSharedValue(0);
+// // ─── Animated Tab Icon ────────────────────────────────────────────────────────
+// function AnimatedIconWrapper({
+//   children,
+//   focused,
+// }: {
+//   children: React.ReactNode;
+//   focused: boolean;
+// }) {
+//   const scale = useSharedValue(1);
+//   const translateY = useSharedValue(0);
+//   const rotation = useSharedValue(0);
 
-  useEffect(() => {
-    if (focused) {
-      scale.value = withSpring(1.15, { damping: 10, stiffness: 150 });
-      translateY.value = withSpring(-2, { damping: 10, stiffness: 150 });
-      rotation.value = withSpring(360, { damping: 12, stiffness: 100 });
-    } else {
-      scale.value = withSpring(1.0, { damping: 12, stiffness: 100 });
-      translateY.value = withSpring(0, { damping: 12, stiffness: 100 });
-      rotation.value = withSpring(0, { damping: 12, stiffness: 100 });
-    }
-  }, [focused]);
+//   useEffect(() => {
+//     if (focused) {
+//       scale.value = withSpring(1.15, { damping: 10, stiffness: 150 });
+//       translateY.value = withSpring(-2, { damping: 10, stiffness: 150 });
+//       rotation.value = withSpring(360, { damping: 12, stiffness: 100 });
+//     } else {
+//       scale.value = withSpring(1.0, { damping: 12, stiffness: 100 });
+//       translateY.value = withSpring(0, { damping: 12, stiffness: 100 });
+//       rotation.value = withSpring(0, { damping: 12, stiffness: 100 });
+//     }
+//   }, [focused]);
 
-  const animatedStyle = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { scale: scale.value },
-        { translateY: translateY.value },
-        { rotate: `${rotation.value}deg` },
-      ],
-    };
-  });
+//   const animatedStyle = useAnimatedStyle(() => {
+//     return {
+//       transform: [
+//         { scale: scale.value },
+//         { translateY: translateY.value },
+//         { rotate: `${rotation.value}deg` },
+//       ],
+//     };
+//   });
 
-  return (
-    <Animated.View style={animatedStyle}>
-      {children}
-    </Animated.View>
-  );
-}
+//   return (
+//     <Animated.View style={animatedStyle}>
+//       {children}
+//     </Animated.View>
+//   );
+// }
 
 // ─── Custom tab bar ──────────────────────────────────────────────────────────
 function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
@@ -122,9 +116,9 @@ function CustomTabBar({ state, descriptors, navigation }: BottomTabBarProps) {
               <Pressable key={route.key} onPress={onPress} style={s.tab}>
                 <View style={[s.tabContent, isFocused && s.activeTabContent]}>
                   <View style={s.iconWrap}>
-                    <AnimatedIconWrapper focused={isFocused}>
-                      {icon}
-                    </AnimatedIconWrapper>
+                    {icon}
+                    {/* <AnimatedIconWrapper focused={isFocused}>
+                    </AnimatedIconWrapper> */}
                   </View>
                   <Text
                     numberOfLines={1}

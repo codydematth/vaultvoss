@@ -4,7 +4,7 @@
     "slug": "vaultvoss",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/Light.png",
+    "icon": "./assets/images/vaultvoss-white.png",
     "scheme": "vaultvoss",
     "userInterfaceStyle": "automatic",
     "newArchEnabled": true,
@@ -31,13 +31,14 @@
         "backgroundColor": "#ffffff",
         "foregroundImage": "./assets/images/adaptive-icon.png",
         "backgroundImage": "./assets/images/adaptive-icon.png",
-        "monochromeImage": "./assets/images/adaptive-icon.png"
+        "monochromeImage": "./assets/images/vaultvoss.png"
       },
       "permissions": ["android.permission.SCHEDULE_EXACT_ALARM"],
       "edgeToEdgeEnabled": true,
       "softwareKeyboardLayoutMode": "resize",
       "predictiveBackGestureEnabled": false,
-      "package": "com.codydematth.vaultvoss"
+      "package": "com.codydematth.vaultvoss",
+      "googleServicesFile": "./google-services.json"
     },
     "web": {
       "output": "static",
@@ -61,13 +62,20 @@
       "expo-secure-store",
       "expo-font",
       "./plugins/withJitpack",
+      "./plugins/withAndroidSwitcherSecurity",
       [
         "@react-native-google-signin/google-signin",
         {
           "iosUrlScheme": "com.googleusercontent.apps.447105374706-nb40amb89c2ht6tjn9jsv9uqfei4l8nf"
         }
       ],
-      "expo-notifications"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon.png",
+          "color": "#FFFFFF"
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

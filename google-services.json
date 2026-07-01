@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "153107654146",
+    "project_id": "vaultvoss-27c24",
+    "storage_bucket": "vaultvoss-27c24.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:153107654146:android:f29e4c3febfcb3ce70691b",
+        "android_client_info": {
+          "package_name": "com.codydematth.vaultvoss"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDOz4M7eX5DXQC4k0WD7riViIfKMEMpt00"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

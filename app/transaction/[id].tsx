@@ -24,9 +24,8 @@ import {useSafeAreaInsets} from 'react-native-safe-area-context';
 import {useToast} from '@/components/ui/toast';
 import {useCurrency, CURRENCY_SYMBOLS} from '@/lib/currency-context';
 import type {ExpenseCategory, IncomeCategory, TransactionType} from '@/lib/api/types';
+import {useEnums} from '@/hooks/use-enums';
 
-const EXPENSE_CATS: ExpenseCategory[] = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Bills', 'Health', 'Other'];
-const INCOME_CATS: IncomeCategory[] = ['Salary', 'Freelance', 'Gift', 'Investment', 'Other'];
 const CURRENCIES = ['USD', 'EUR', 'GBP', 'NGN', 'CAD', 'AUD', 'JPY', 'CHF', 'INR'];
 
 export default function EditTransactionScreen() {
@@ -38,6 +37,7 @@ export default function EditTransactionScreen() {
   const {data: transaction, isLoading, error: fetchError} = useTransaction(id);
   const updateMutation = useUpdateTransaction();
   const deleteMutation = useDeleteTransaction();
+  const {expense_categories, income_categories} = useEnums();
 
   const [type, setType] = useState<TransactionType>('expense');
   const [name, setName] = useState('');
@@ -101,7 +101,7 @@ export default function EditTransactionScreen() {
     });
   };
 
-  const cats = type === 'expense' ? EXPENSE_CATS : INCOME_CATS;
+  const cats = type === 'expense' ? expense_categories : income_categories;
   const selectedCat = type === 'expense' ? expenseCat : incomeCat;
 
   if (isLoading) {

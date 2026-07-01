@@ -26,7 +26,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
-import { checkBudgetWarnings } from "@/lib/notifications";
 import { useAllBudgetGoalsStatus } from "@/hooks/use-budget-goals";
 import { storage } from "@/lib/storage";
 
@@ -118,14 +117,6 @@ export default function HomeScreen() {
   const { data: recurringItems } = useRecurringTransactions();
 
   const { data: budgetStatuses } = useAllBudgetGoalsStatus();
-
-  // Check budget warnings when statuses load
-  const budgetCheckedRef = useRef(false);
-  useEffect(() => {
-    if (!budgetStatuses || budgetStatuses.length === 0 || budgetCheckedRef.current) return;
-    checkBudgetWarnings(budgetStatuses);
-    budgetCheckedRef.current = true;
-  }, [budgetStatuses]);
 
   // Load transactions based on active tab filtering
   const params =

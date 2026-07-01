@@ -15,8 +15,12 @@
     "build-all": "eas build --platform all",
     "build-development-apk": "eas build --profile development --platform android",
     "build-development-ios": "eas build --profile development --platform ios",
+    "build-preview-ios": "eas build --platform ios --profile preview",
     "publish-app": "eas update --branch main --message 'New Update'",
-    "publish-app-preview": "eas update --branch preview --message 'New Update'",
+    "publish-preview": "eas update --branch preview --message 'Added new dashboard view'",
+    "publish-development": "eas update --branch development --message 'Added new dashboard view'",
+    "register-device": "eas device:create",
+    "update-device": "eas device:update",
     "configure-eas": "eas update:configure"
   },
   "dependencies": {

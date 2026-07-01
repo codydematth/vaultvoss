@@ -128,10 +128,21 @@ export default function NotificationsScreen() {
   // ── Daily Reminder Toggle ─────────────────────────────────────────────────
   const handleDailyToggle = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Optimistic UI and local storage update immediately
+    setDailyEnabled(value);
+    await storage.setNotifDailyEnabled(value);
+
     if (value) {
       const ok = await ensurePermission();
-      if (!ok) return;
-      await registerPushNotifications();
+      if (!ok) {
+        setDailyEnabled(false);
+        await storage.setNotifDailyEnabled(false);
+        return;
+      }
+      registerPushNotifications().catch((err) =>
+        console.warn("Failed to register push token:", err)
+      );
     }
     
     try {
@@ -142,10 +153,11 @@ export default function NotificationsScreen() {
         type: "success",
       });
     } catch (err) {
+      // Revert if request fails
+      setDailyEnabled(!value);
+      await storage.setNotifDailyEnabled(!value);
       showToast({ message: "Failed to update daily reminder setting", type: "error" });
     }
-    setDailyEnabled(value);
-    await storage.setNotifDailyEnabled(value);
   };
 
   const handleTimeChange = async (hour: number) => {
@@ -163,10 +175,21 @@ export default function NotificationsScreen() {
   // ── Bill Reminders Toggle ─────────────────────────────────────────────────
   const handleBillsToggle = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Optimistic UI and local storage update immediately
+    setBillsEnabled(value);
+    await storage.setNotifBillsEnabled(value);
+
     if (value) {
       const ok = await ensurePermission();
-      if (!ok) return;
-      await registerPushNotifications();
+      if (!ok) {
+        setBillsEnabled(false);
+        await storage.setNotifBillsEnabled(false);
+        return;
+      }
+      registerPushNotifications().catch((err) =>
+        console.warn("Failed to register push token:", err)
+      );
     }
 
     try {
@@ -174,19 +197,31 @@ export default function NotificationsScreen() {
       await refreshUser();
       showToast({ message: value ? "Bill reminders enabled" : "Bill reminders disabled", type: "success" });
     } catch (err) {
+      // Revert if request fails
+      setBillsEnabled(!value);
+      await storage.setNotifBillsEnabled(!value);
       showToast({ message: "Failed to update bill reminders setting", type: "error" });
     }
-    setBillsEnabled(value);
-    await storage.setNotifBillsEnabled(value);
   };
 
   // ── Budget Warnings Toggle ────────────────────────────────────────────────
   const handleBudgetToggle = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Optimistic UI and local storage update immediately
+    setBudgetEnabled(value);
+    await storage.setNotifBudgetEnabled(value);
+
     if (value) {
       const ok = await ensurePermission();
-      if (!ok) return;
-      await registerPushNotifications();
+      if (!ok) {
+        setBudgetEnabled(false);
+        await storage.setNotifBudgetEnabled(false);
+        return;
+      }
+      registerPushNotifications().catch((err) =>
+        console.warn("Failed to register push token:", err)
+      );
     }
 
     try {
@@ -194,19 +229,31 @@ export default function NotificationsScreen() {
       await refreshUser();
       showToast({ message: value ? "Budget warnings enabled" : "Budget warnings disabled", type: "success" });
     } catch (err) {
+      // Revert if request fails
+      setBudgetEnabled(!value);
+      await storage.setNotifBudgetEnabled(!value);
       showToast({ message: "Failed to update budget warnings setting", type: "error" });
     }
-    setBudgetEnabled(value);
-    await storage.setNotifBudgetEnabled(value);
   };
 
   // ── Weekly Summary Toggle ─────────────────────────────────────────────────
   const handleWeeklyToggle = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Optimistic UI and local storage update immediately
+    setWeeklyEnabled(value);
+    await storage.setNotifWeeklyEnabled(value);
+
     if (value) {
       const ok = await ensurePermission();
-      if (!ok) return;
-      await registerPushNotifications();
+      if (!ok) {
+        setWeeklyEnabled(false);
+        await storage.setNotifWeeklyEnabled(false);
+        return;
+      }
+      registerPushNotifications().catch((err) =>
+        console.warn("Failed to register push token:", err)
+      );
     }
 
     try {
@@ -217,19 +264,31 @@ export default function NotificationsScreen() {
         type: "success",
       });
     } catch (err) {
+      // Revert if request fails
+      setWeeklyEnabled(!value);
+      await storage.setNotifWeeklyEnabled(!value);
       showToast({ message: "Failed to update weekly summary setting", type: "error" });
     }
-    setWeeklyEnabled(value);
-    await storage.setNotifWeeklyEnabled(value);
   };
 
   // ── Monthly Budget Toggle ──────────────────────────────────────────────────
   const handleMonthlyBudgetToggle = async (value: boolean) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    
+    // Optimistic UI and local storage update immediately
+    setMonthlyBudgetEnabled(value);
+    await storage.setNotifMonthlyBudgetEnabled(value);
+
     if (value) {
       const ok = await ensurePermission();
-      if (!ok) return;
-      await registerPushNotifications();
+      if (!ok) {
+        setMonthlyBudgetEnabled(false);
+        await storage.setNotifMonthlyBudgetEnabled(false);
+        return;
+      }
+      registerPushNotifications().catch((err) =>
+        console.warn("Failed to register push token:", err)
+      );
     }
 
     try {
@@ -240,10 +299,11 @@ export default function NotificationsScreen() {
         type: "success",
       });
     } catch (err) {
+      // Revert if request fails
+      setMonthlyBudgetEnabled(!value);
+      await storage.setNotifMonthlyBudgetEnabled(!value);
       showToast({ message: "Failed to update monthly budget setting", type: "error" });
     }
-    setMonthlyBudgetEnabled(value);
-    await storage.setNotifMonthlyBudgetEnabled(value);
   };
 
   const formatTime = (h: number, m: number) => {

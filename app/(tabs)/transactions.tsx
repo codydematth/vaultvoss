@@ -28,11 +28,9 @@ import {useToast} from '@/components/ui/toast';
 import {useQueryClient} from '@tanstack/react-query';
 import {useCurrency} from '@/lib/currency-context';
 import type {TransactionType, Transaction, ExpenseCategory, IncomeCategory, TransactionListParams} from '@/lib/api/types';
+import {useEnums} from '@/hooks/use-enums';
 
 type Filter = 'all' | TransactionType;
-
-const EXPENSE_CATS: ExpenseCategory[] = ['Food', 'Transport', 'Shopping', 'Entertainment', 'Bills', 'Health', 'Other'];
-const INCOME_CATS: IncomeCategory[] = ['Salary', 'Freelance', 'Gift', 'Investment', 'Other'];
 
 function groupByDate(txns: Transaction[]) {
   // 1. Sort all transactions descending by their actual creation time
@@ -81,6 +79,7 @@ export default function TransactionsScreen() {
   const qc = useQueryClient();
   const {showToast} = useToast();
   const {formatMoney} = useCurrency();
+  const {expense_categories, income_categories} = useEnums();
 
   const [search, setSearch] = useState('');
   const [refreshing, setRefreshing] = useState(false);
@@ -231,7 +230,7 @@ export default function TransactionsScreen() {
     setShowFilterModal(false);
   };
 
-  const cats = tempType === 'expense' ? EXPENSE_CATS : tempType === 'income' ? INCOME_CATS : [];
+  const cats = tempType === 'expense' ? expense_categories : tempType === 'income' ? income_categories : [];
   const selectedCat = tempType === 'expense' ? tempExpenseCat : tempIncomeCat;
   const handleSelectCat = (cat: string) => {
     if (tempType === 'expense') {

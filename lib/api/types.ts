@@ -75,7 +75,7 @@ export type TransactionType = 'income' | 'expense';
 
 export type ExpenseCategory =
   | 'Food' | 'Transport' | 'Shopping' | 'Entertainment'
-  | 'Bills' | 'Health' | 'Other';
+  | 'Bills' | 'Health' | 'Gift' | 'Miscellaneous' | 'Betting' | 'Other';
 
 export type IncomeCategory =
   | 'Salary' | 'Freelance' | 'Gift' | 'Investment' | 'Other';
