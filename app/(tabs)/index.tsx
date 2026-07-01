@@ -5,15 +5,16 @@ import { C } from "@/constants/colors";
 import { Fonts } from "@/constants/theme";
 import { useAnalyticsSummary } from "@/hooks/use-analytics";
 import { useMe } from "@/hooks/use-auth";
-import { useBudgetGoals } from "@/hooks/use-budget-goals";
+import { useAllBudgetGoalsStatus, useBudgetGoals } from "@/hooks/use-budget-goals";
 import { useNetWorth } from "@/hooks/use-net-worth";
 import { useRecurringTransactions } from "@/hooks/use-recurring";
 import { useTransactions } from "@/hooks/use-transactions";
 import { useCurrency } from "@/lib/currency-context";
+import { storage } from "@/lib/storage";
 import { useQueryClient } from "@tanstack/react-query";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Dimensions,
@@ -26,8 +27,6 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import Svg, { Circle } from "react-native-svg";
-import { useAllBudgetGoalsStatus } from "@/hooks/use-budget-goals";
-import { storage } from "@/lib/storage";
 
 const { width } = Dimensions.get("window");
 
@@ -139,7 +138,9 @@ export default function HomeScreen() {
 
   // ── Module quick-access cards ──
   const nwCount = netWorth?.items?.length ?? 0;
-  const bgCount = (budgetGoals ?? []).filter((g: any) => g.goal?.is_active ?? g.is_active).length;
+  const bgCount = (budgetGoals ?? []).filter(
+    (g: any) => g.goal?.is_active ?? g.is_active,
+  ).length;
   const rcCount = (recurringItems ?? []).filter((r: any) => r.is_active).length;
 
   const moduleCards: {
@@ -265,12 +266,12 @@ export default function HomeScreen() {
               hitSlop={8}
               onPress={() => {
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                router.push('/notifications' as any);
+                router.push("/notifications" as any);
               }}
             >
               <View style={{ position: "relative" }}>
                 <IconSymbol name="bell" size={20} color={C.textSecondary} />
-                <View
+                {/* <View
                   style={{
                     position: "absolute",
                     top: -1,
@@ -280,7 +281,7 @@ export default function HomeScreen() {
                     borderRadius: 3.5,
                     backgroundColor: C.expense,
                   }}
-                />
+                /> */}
               </View>
             </Pressable>
           </View>
@@ -295,11 +296,21 @@ export default function HomeScreen() {
               gap: 2,
             })}
           >
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <Text variant="caption" color="secondary" style={{ fontSize: 15 }}>
+            <View
+              style={{ flexDirection: "row", alignItems: "center", gap: 8 }}
+            >
+              <Text
+                variant="caption"
+                color="secondary"
+                style={{ fontSize: 15 }}
+              >
                 Balance
               </Text>
-              <IconSymbol name={hideBalance ? "eye.slash" : "eye"} size={16} color={C.textSecondary} />
+              <IconSymbol
+                name={hideBalance ? "eye.slash" : "eye"}
+                size={16}
+                color={C.textSecondary}
+              />
             </View>
             {summaryLoading ? (
               <ActivityIndicator
@@ -314,7 +325,7 @@ export default function HomeScreen() {
                     color: C.textPrimary,
                     fontFamily: Fonts.sansBold,
                   },
-                  hideBalance && { fontSize: 18, lineHeight: 34 }
+                  hideBalance && { fontSize: 18, lineHeight: 34 },
                 ]}
               >
                 {hideBalance ? "******" : displayMoney(net)}
@@ -374,7 +385,11 @@ export default function HomeScreen() {
             </View>
             <DonutProgress
               percentage={displaySavingsRate}
-              amount={hideBalance ? "****" : `${getCurrencySymbol()}${Math.round(net ?? 0).toLocaleString()}`}
+              amount={
+                hideBalance
+                  ? "****"
+                  : `${getCurrencySymbol()}${Math.round(net ?? 0).toLocaleString()}`
+              }
               label="Saved"
             />
           </View>
@@ -598,7 +613,11 @@ export default function HomeScreen() {
             <ActivityIndicator color={C.accent} />
           ) : transactions?.length ? (
             [...transactions]
-              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+              .sort(
+                (a, b) =>
+                  new Date(b.created_at).getTime() -
+                  new Date(a.created_at).getTime(),
+              )
               .map((tx) => (
                 <TransactionRow
                   key={tx.id}

@@ -7,6 +7,7 @@ const CATEGORY_EMOJI: Record<string, string> = {
   Food: '🍔', Transport: '🚗', Shopping: '🛍️', Entertainment: '🎬',
   Bills: '📄', Health: '💊', Other: '•',
   Salary: '💼', Freelance: '💻', Gift: '🎁', Investment: '📈',
+  Miscellaneous: '📦', Betting: '🎲',
 };
 
 interface CategoryIconProps {

@@ -48,6 +48,8 @@ export const C = {
   catFreelance: '#84CC16',
   catGift: '#F472B6',
   catInvestment: '#06B6D4',
+  catMiscellaneous: '#94A3B8',
+  catBetting: '#F43F5E',
 
   // Utility
   white: '#FFFFFF',
@@ -64,6 +66,9 @@ export const EXPENSE_CATEGORY_COLOR: Record<string, string> = {
   Entertainment: C.catEntertainment,
   Bills: C.catBills,
   Health: C.catHealth,
+  Gift: C.catGift,
+  Miscellaneous: C.catMiscellaneous,
+  Betting: C.catBetting,
   Other: C.catOther,
 };
 
